@@ -1,0 +1,59 @@
+<header class="header">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <!-- Logo -->
+      <a class="navbar-brand" routerLink="/home">
+        <i class="fas fa-taxi me-2"></i>
+        <strong>VK Drop Taxi</strong>
+      </a>
+
+      <!-- Mobile Toggle Button -->
+      <button 
+        class="navbar-toggler" 
+        type="button" 
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="isMenuOpen"
+        aria-controls="navbarNav"
+        aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <!-- Navigation Menu -->
+      <div class="collapse navbar-collapse" [class.show]="isMenuOpen" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/home" routerLinkActive="active" (click)="isMenuOpen = false">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/fare-estimator" routerLinkActive="active" (click)="isMenuOpen = false">Fare Estimator</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/services" routerLinkActive="active" (click)="isMenuOpen = false">Services</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/packages" routerLinkActive="active" (click)="isMenuOpen = false">Packages</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/about" routerLinkActive="active" (click)="isMenuOpen = false">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/contact" routerLinkActive="active" (click)="isMenuOpen = false">Contact</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/booking-status" routerLinkActive="active" (click)="isMenuOpen = false">Track Booking</a>
+          </li>
+        </ul>
+
+        <!-- Contact Buttons -->
+        <div class="d-flex ms-3">
+          <a href="tel:+919876543210" class="btn btn-success btn-sm me-2">
+            <i class="fas fa-phone"></i> Call Now
+          </a>
+          <a href="https://wa.me/919876543210" target="_blank" class="btn btn-success btn-sm">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

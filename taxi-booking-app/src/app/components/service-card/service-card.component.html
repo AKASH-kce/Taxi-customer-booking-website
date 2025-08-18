@@ -1,0 +1,8 @@
+<div class="service-card" [class.clickable]="link">
+  <i [class]="icon"></i>
+  <h4>{{ title }}</h4>
+  <p>{{ description }}</p>
+  <a *ngIf="link" [routerLink]="link" class="service-link">
+    Learn More <i class="fas fa-arrow-right"></i>
+  </a>
+</div>

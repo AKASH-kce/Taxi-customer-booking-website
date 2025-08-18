@@ -1,0 +1,187 @@
+<div class="booking-form">
+  <h3 class="text-center mb-4">Book Your Ride</h3>
+  
+  <form [formGroup]="bookingForm" (ngSubmit)="onSubmit()">
+    <div class="row">
+      <!-- Pickup Location -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Pickup Location *</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+          <input 
+            type="text" 
+            class="form-control" 
+            formControlName="pickupLocation"
+            placeholder="Enter pickup location"
+            [class.is-invalid]="bookingForm.get('pickupLocation')?.invalid && bookingForm.get('pickupLocation')?.touched"
+          >
+        </div>
+        <div class="invalid-feedback" *ngIf="getFieldError('pickupLocation')">
+          {{ getFieldError('pickupLocation') }}
+        </div>
+      </div>
+
+      <!-- Drop Location -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Drop Location *</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+          <input 
+            type="text" 
+            class="form-control" 
+            formControlName="dropLocation"
+            placeholder="Enter drop location"
+            [class.is-invalid]="bookingForm.get('dropLocation')?.invalid && bookingForm.get('dropLocation')?.touched"
+          >
+        </div>
+        <div class="invalid-feedback" *ngIf="getFieldError('dropLocation')">
+          {{ getFieldError('dropLocation') }}
+        </div>
+      </div>
+
+      <!-- Trip Type -->
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Trip Type *</label>
+        <select class="form-select" formControlName="tripType" [class.is-invalid]="bookingForm.get('tripType')?.invalid && bookingForm.get('tripType')?.touched">
+          <option value="">Select Trip Type</option>
+          <option value="local">Local</option>
+          <option value="outstation">Out Station</option>
+          <option value="hourly">Hourly</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="getFieldError('tripType')">
+          {{ getFieldError('tripType') }}
+        </div>
+      </div>
+
+      <!-- Trip Mode -->
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Trip Mode *</label>
+        <select class="form-select" formControlName="tripMode" [class.is-invalid]="bookingForm.get('tripMode')?.invalid && bookingForm.get('tripMode')?.touched">
+          <option value="">Select Trip Mode</option>
+          <option value="oneway">One Way</option>
+          <option value="roundtrip">Round Trip</option>
+        </select>
+        <div class="invalid-feedback" *ngIf="getFieldError('tripMode')">
+          {{ getFieldError('tripMode') }}
+        </div>
+      </div>
+
+      <!-- Vehicle Type -->
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Vehicle Type *</label>
+        <select class="form-select" formControlName="vehicleType" [class.is-invalid]="bookingForm.get('vehicleType')?.invalid && bookingForm.get('vehicleType')?.touched">
+          <option value="">Select Vehicle</option>
+          <option *ngFor="let vehicle of vehicleTypes" [value]="vehicle.id">
+            {{ vehicle.name }} - ₹{{ vehicle.baseFare }}/km
+          </option>
+        </select>
+        <div class="invalid-feedback" *ngIf="getFieldError('vehicleType')">
+          {{ getFieldError('vehicleType') }}
+        </div>
+      </div>
+
+      <!-- Pickup Date -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Pickup Date *</label>
+        <input 
+          type="date" 
+          class="form-control" 
+          formControlName="pickupDate"
+          [class.is-invalid]="bookingForm.get('pickupDate')?.invalid && bookingForm.get('pickupDate')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="getFieldError('pickupDate')">
+          {{ getFieldError('pickupDate') }}
+        </div>
+      </div>
+
+      <!-- Pickup Time -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Pickup Time *</label>
+        <input 
+          type="time" 
+          class="form-control" 
+          formControlName="pickupTime"
+          [class.is-invalid]="bookingForm.get('pickupTime')?.invalid && bookingForm.get('pickupTime')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="getFieldError('pickupTime')">
+          {{ getFieldError('pickupTime') }}
+        </div>
+      </div>
+
+      <!-- Passenger Name -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Passenger Name *</label>
+        <input 
+          type="text" 
+          class="form-control" 
+          formControlName="passengerName"
+          placeholder="Enter passenger name"
+          [class.is-invalid]="bookingForm.get('passengerName')?.invalid && bookingForm.get('passengerName')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="getFieldError('passengerName')">
+          {{ getFieldError('passengerName') }}
+        </div>
+      </div>
+
+      <!-- Passenger Phone -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Phone Number *</label>
+        <input 
+          type="tel" 
+          class="form-control" 
+          formControlName="passengerPhone"
+          placeholder="Enter 10-digit phone number"
+          [class.is-invalid]="bookingForm.get('passengerPhone')?.invalid && bookingForm.get('passengerPhone')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="getFieldError('passengerPhone')">
+          {{ getFieldError('passengerPhone') }}
+        </div>
+      </div>
+
+      <!-- Passenger Email -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Email Address *</label>
+        <input 
+          type="email" 
+          class="form-control" 
+          formControlName="passengerEmail"
+          placeholder="Enter email address"
+          [class.is-invalid]="bookingForm.get('passengerEmail')?.invalid && bookingForm.get('passengerEmail')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="getFieldError('passengerEmail')">
+          {{ getFieldError('passengerEmail') }}
+        </div>
+      </div>
+
+      <!-- Special Instructions -->
+      <div class="col-md-6 mb-3">
+        <label class="form-label">Special Instructions</label>
+        <textarea 
+          class="form-control" 
+          formControlName="specialInstructions"
+          rows="3"
+          placeholder="Any special requirements or instructions"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="text-center mt-4">
+      <button 
+        type="submit" 
+        class="btn btn-primary btn-lg px-5"
+        [disabled]="isLoading"
+      >
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+        {{ isLoading ? 'Booking...' : 'Book Now' }}
+      </button>
+    </div>
+  </form>
+  
+  <!-- Loading Overlay -->
+  <app-loading-spinner 
+    [isLoading]="isLoading" 
+    message="Processing your booking..."
+    [overlay]="true">
+  </app-loading-spinner>
+</div>
