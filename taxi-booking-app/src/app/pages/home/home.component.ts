@@ -39,11 +39,11 @@ export class HomeComponent implements OnInit {
         this.successMessage = `Booking successful! Your booking ID is ${response.id}`;
         
         // Redirect to booking status page after 3 seconds
-        setTimeout(() => {
-          this.router.navigate(['/booking-status'], { 
-            queryParams: { bookingId: response.id } 
-          });
-        }, 3000);
+        // setTimeout(() => {
+        //   this.router.navigate(['/booking-status'], { 
+        //     queryParams: { bookingId: response.id } 
+        //   });
+        // }, 3000);
       },
       error: (error) => {
         this.isLoading = false;

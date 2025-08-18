@@ -7,6 +7,7 @@ import { MapService, Location } from '../../services/map.service';
 import { BookingService } from '../../services/booking.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import * as L from 'leaflet';
+import { BookingPaymentService } from '../../services/booking-payment.service';
 
 // Google Maps type declarations
 declare global {
@@ -31,9 +32,10 @@ declare global {
 })
 export class BookingFormComponent implements OnInit, OnDestroy {
   @Output() bookingSubmitted = new EventEmitter<Booking>();
-  
+
   bookingForm: FormGroup;
   isLoading = false;
+  upiImageURL:string|undefined;
   isCalculatingFare = false;
   currentLocation: Location | null = null;
   pickupPredictions: any[] = [];
@@ -48,11 +50,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   private dropLeafletMap: L.Map | null = null;
 
   vehicleTypes: VehicleType[] = [
-    { 
-      id: 'hatchback', 
-      name: 'Hatchback', 
+    {
+      id: 'hatchback',
+      name: 'Hatchback',
       type: 'sedan',
-      baseFare: 10, 
+      baseFare: 10,
       perKmRate: 12,
       perHourRate: 100,
       capacity: 4,
@@ -60,11 +62,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       description: 'Economical hatchback for city travel',
       features: ['AC', 'Music System', 'GPS']
     },
-    { 
-      id: 'sedan', 
-      name: 'Sedan', 
+    {
+      id: 'sedan',
+      name: 'Sedan',
       type: 'sedan',
-      baseFare: 15, 
+      baseFare: 15,
       perKmRate: 15,
       perHourRate: 120,
       capacity: 4,
@@ -72,11 +74,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       description: 'Comfortable sedan for business travel',
       features: ['AC', 'Music System', 'GPS', 'Leather Seats']
     },
-    { 
-      id: 'suv', 
-      name: 'SUV', 
+    {
+      id: 'suv',
+      name: 'SUV',
       type: 'suv',
-      baseFare: 20, 
+      baseFare: 20,
       perKmRate: 18,
       perHourRate: 150,
       capacity: 6,
@@ -84,11 +86,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       description: 'Spacious SUV for family travel',
       features: ['AC', 'Music System', 'GPS', 'Extra Space']
     },
-    { 
-      id: 'luxury', 
-      name: 'Luxury', 
+    {
+      id: 'luxury',
+      name: 'Luxury',
       type: 'luxury',
-      baseFare: 30, 
+      baseFare: 30,
       perKmRate: 25,
       perHourRate: 200,
       capacity: 4,
@@ -101,7 +103,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private mapService: MapService,
-    private bookingService: BookingService
+    private bookingService: BookingService,
+    private bookingPaymentservice:BookingPaymentService
   ) {
     this.bookingForm = this.fb.group({
       pickupLocation: ['', [Validators.required]],
@@ -109,7 +112,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       tripType: ['', [Validators.required]],
       tripMode: ['', [Validators.required]],
       vehicleType: ['', [Validators.required]],
-      pickupDistance:['',[Validators.required,Validators.min(0.1)]],
+      pickupDistance: ['', [Validators.required, Validators.min(0.1)]],
       pickupDate: ['', [Validators.required]],
       pickupTime: ['', [Validators.required]],
       passengerName: ['', [Validators.required]],
@@ -189,9 +192,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.calculateFare());
 
-      this.bookingForm.get('pickupDistance')?.valueChanges
+    this.bookingForm.get('pickupDistance')?.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(()=>this.calculateFare())
+      .subscribe(() => this.calculateFare())
   }
 
   getCurrentLocation(): void {
@@ -303,8 +306,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const drop = this.bookingForm.get('dropLocation')?.value;
     const vehicleType = this.bookingForm.get('vehicleType')?.value;
     const tripType = this.bookingForm.get('tripType')?.value;
-     const distance = parseFloat(this.bookingForm.get('pickupDistance')?.value);
- // If distance is provided, use it for calculation
+    const distance = parseFloat(this.bookingForm.get('pickupDistance')?.value);
+    // If distance is provided, use it for calculation
     if (distance && distance > 0 && vehicleType) {
       this.calculateFareByDistance(distance, vehicleType);
       return;
@@ -336,7 +339,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   calculateFareByDistance(distance: number, vehicleTypeId: string): void {
     this.isCalculatingFare = true;
     const vehicle = this.vehicleTypes.find(v => v.id === vehicleTypeId);
-    
+
     if (vehicle) {
       // Simple fare = base fare + (distance * per km rate)
       this.estimatedFare = vehicle.baseFare + (distance * vehicle.perKmRate);
@@ -345,7 +348,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.estimatedFare = 0;
       this.showFareEstimate = false;
     }
-    
+
     this.isCalculatingFare = false;
   }
 
@@ -362,7 +365,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   onSubmit() {
     if (this.bookingForm.valid) {
       this.isLoading = true;
-      
+
       const formValue = this.bookingForm.value;
       const bookingData: Booking = {
         id: this.generateBookingId(),
@@ -385,10 +388,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         updatedAt: new Date(),
         notes: formValue.specialInstructions
       };
-
+//  this.bookingSubmitted.emit(bookingData);
       // Simulate API call
       setTimeout(() => {
-        this.bookingSubmitted.emit(bookingData);
+       
         this.isLoading = false;
         this.bookingForm.reset();
         this.showFareEstimate = false;
@@ -406,7 +409,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   private calculateEstimatedFare(): number {
     const vehicleType = this.vehicleTypes.find(v => v.id === this.bookingForm.get('vehicleType')?.value);
     if (!vehicleType) return 0;
-    
+
     return vehicleType.baseFare + (vehicleType.perKmRate * 10);
   }
 
@@ -417,7 +420,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
- getFieldError(fieldName: string): string {
+  getFieldError(fieldName: string): string {
     const field = this.bookingForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
@@ -435,7 +438,66 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
     return '';
   }
-   private formatFieldName(name: string): string {
+  private formatFieldName(name: string): string {
     return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   }
+
+payWithUPI() {
+  if (this.bookingForm.invalid) {
+    this.markFormGroupTouched();
+    return;
+  }
+
+  this.isLoading = true;
+
+  const formValue = this.bookingForm.value;
+  const bookingId = this.generateBookingId(); // single booking ID
+  const bookingData: Booking = {
+    id: bookingId,
+    bookingId: bookingId,
+    customerName: formValue.passengerName,
+    customerPhone: formValue.passengerPhone,
+    customerEmail: formValue.passengerEmail,
+    pickupLocation: formValue.pickupLocation,
+    dropLocation: formValue.dropLocation,
+    tripType: formValue.tripType,
+    tripMode: formValue.tripMode,
+    vehicleType: formValue.vehicleType,
+    date: formValue.pickupDate,
+    time: formValue.pickupTime,
+    estimatedFare: this.estimatedFare || this.calculateEstimatedFare(),
+    status: 'pending',
+    bookingDate: new Date(),
+    paymentStatus: 'pending',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    notes: formValue.specialInstructions
+  };
+
+  // Emit booking first
+  this.bookingSubmitted.emit(bookingData);
+
+  // Get UPI link
+  const upiLink = this.bookingPaymentservice.getUPILink(bookingId, bookingData.estimatedFare);
+
+  // Detect mobile vs desktop
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    // Mobile: open UPI link in new window/tab without leaving page
+    window.open(upiLink, '_blank');
+  } else {
+    // Desktop: show QR code in page
+    this.showUPIQRCode(upiLink);
+  }
+
+  this.isLoading = false;
+}
+
+
+// Example QR code function (use ngx-qrcode or similar library)
+showUPIQRCode(link: string) {
+  this.upiImageURL="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data="+link;
+}
+
 }
