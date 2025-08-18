@@ -109,6 +109,7 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       tripType: ['', [Validators.required]],
       tripMode: ['', [Validators.required]],
       vehicleType: ['', [Validators.required]],
+      pickupDistance:['',[Validators.required,Validators.min(0.1)]],
       pickupDate: ['', [Validators.required]],
       pickupTime: ['', [Validators.required]],
       passengerName: ['', [Validators.required]],
@@ -120,11 +121,24 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.setupFormListeners();
+    this.setupCurrentLocationListener();
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+  private setupCurrentLocationListener(): void {
+    this.bookingForm.get('pickupLocation')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        if (value === 'CURRENT_LOCATION' && this.currentLocation) {
+          this.bookingForm.patchValue({
+            pickupLocation: this.currentLocation.address
+          });
+          this.calculateFare();
+        }
+      });
   }
 
   private setupFormListeners(): void {
@@ -174,6 +188,10 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     this.bookingForm.get('tripType')?.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => this.calculateFare());
+
+      this.bookingForm.get('pickupDistance')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(()=>this.calculateFare())
   }
 
   getCurrentLocation(): void {
@@ -181,9 +199,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       next: (location) => {
         this.currentLocation = location;
         this.bookingForm.patchValue({
-          pickupLocation: location.address
+          pickupLocation: 'CURRENT_LOCATION'
         });
-        this.calculateFare();
+        this.isLoading = false;
       },
       error: (error) => {
         console.error('Failed to get current location:', error);
@@ -285,7 +303,12 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     const drop = this.bookingForm.get('dropLocation')?.value;
     const vehicleType = this.bookingForm.get('vehicleType')?.value;
     const tripType = this.bookingForm.get('tripType')?.value;
-
+     const distance = parseFloat(this.bookingForm.get('pickupDistance')?.value);
+ // If distance is provided, use it for calculation
+    if (distance && distance > 0 && vehicleType) {
+      this.calculateFareByDistance(distance, vehicleType);
+      return;
+    }
     if (pickup && drop && vehicleType && tripType) {
       this.isCalculatingFare = true;
       this.showFareEstimate = false;
@@ -293,6 +316,9 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       this.bookingService.estimateFare(pickup, drop, vehicleType, tripType).subscribe({
         next: (estimate) => {
           this.estimatedFare = estimate.totalFare;
+          this.bookingForm.patchValue({
+            pickupDistance: estimate.distance.toFixed(2)
+          });
           this.showFareEstimate = true;
           this.isCalculatingFare = false;
         },
@@ -305,6 +331,24 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       });
     }
   }
+
+  // Add this new method for distance-based calculation
+  calculateFareByDistance(distance: number, vehicleTypeId: string): void {
+    this.isCalculatingFare = true;
+    const vehicle = this.vehicleTypes.find(v => v.id === vehicleTypeId);
+    
+    if (vehicle) {
+      // Simple fare = base fare + (distance * per km rate)
+      this.estimatedFare = vehicle.baseFare + (distance * vehicle.perKmRate);
+      this.showFareEstimate = true;
+    } else {
+      this.estimatedFare = 0;
+      this.showFareEstimate = false;
+    }
+    
+    this.isCalculatingFare = false;
+  }
+
 
   private calculateSimpleFare(): void {
     const vehicleType = this.vehicleTypes.find(v => v.id === this.bookingForm.get('vehicleType')?.value);
@@ -373,11 +417,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     });
   }
 
-  getFieldError(fieldName: string): string {
+ getFieldError(fieldName: string): string {
     const field = this.bookingForm.get(fieldName);
     if (field?.errors && field.touched) {
       if (field.errors['required']) {
-        return `${fieldName.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} is required`;
+        return `${this.formatFieldName(fieldName)} is required`;
       }
       if (field.errors['email']) {
         return 'Please enter a valid email address';
@@ -385,7 +429,13 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       if (field.errors['pattern']) {
         return 'Please enter a valid 10-digit phone number';
       }
+      if (field.errors['min']) {
+        return 'Distance must be greater than 0';
+      }
     }
     return '';
+  }
+   private formatFieldName(name: string): string {
+    return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   }
 }

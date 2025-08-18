@@ -141,7 +141,7 @@
       </div>
 
       <!-- Pickup Date -->
-      <div class="col-md-6 mb-3">
+      <div class="col-md-4 mb-3">
         <label class="form-label">Pickup Date *</label>
         <input 
           type="date" 
@@ -155,7 +155,7 @@
       </div>
 
       <!-- Pickup Time -->
-      <div class="col-md-6 mb-3">
+      <div class="col-md-4 mb-3">
         <label class="form-label">Pickup Time *</label>
         <input 
           type="time" 
@@ -165,6 +165,22 @@
         >
         <div class="invalid-feedback" *ngIf="getFieldError('pickupTime')">
           {{ getFieldError('pickupTime') }}
+        </div>
+      </div>
+        <!-- Pickup distance -->
+      <div class="col-md-4 mb-3">
+        <label class="form-label">Distance(km) *</label>
+        <input 
+          type="number" 
+          class="form-control" 
+          formControlName="pickupDistance"
+          placeholder="Enter Distance"
+          step="0.1"
+          min="0.1"
+          [class.is-invalid]="bookingForm.get('pickupDistance')?.invalid && bookingForm.get('pickupDistance')?.touched"
+        >
+        <div class="invalid-feedback" *ngIf="getFieldError('pickupDistance')">
+          {{ getFieldError('pickupDistance') }}
         </div>
       </div>
 

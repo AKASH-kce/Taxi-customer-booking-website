@@ -71,6 +71,9 @@ export class MapService {
 
   // Geocode address to coordinates
   geocodeAddress(address: string): Observable<Location> {
+     if (address === 'CURRENT_LOCATION') {
+      return this.getCurrentLocation();
+    }
     return new Observable(observer => {
       const url = `${this.nominatimBase}/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
       fetch(url, { headers: { 'Accept-Language': 'en' } })
