@@ -41,6 +41,14 @@
                   >
                     <i class="fas fa-crosshairs"></i>
                   </button>
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-primary" 
+                    (click)="toggleFromMap()"
+                    title="Pick on Map"
+                  >
+                    <i class="fas fa-map"></i>
+                  </button>
                 </div>
                 <div class="invalid-feedback" *ngIf="fareForm.get('fromLocation')?.invalid && fareForm.get('fromLocation')?.touched">
                   Pickup location is required
@@ -55,10 +63,13 @@
                   >
                     <i class="fas fa-map-marker-alt text-primary me-2"></i>
                     <div>
-                      <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
-                      <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+                      <div class="prediction-main">{{ prediction.structured_formatting?.main_text || prediction.description }}</div>
+                      <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text || '' }}</div>
                     </div>
                   </div>
+                </div>
+                <div class="map-container mt-2" *ngIf="showFromMap">
+                  <div id="fromMapContainer" style="height: 300px; border-radius: 10px;"></div>
                 </div>
               </div>
               
@@ -73,6 +84,14 @@
                     placeholder="Enter drop location"
                     [class.is-invalid]="fareForm.get('toLocation')?.invalid && fareForm.get('toLocation')?.touched"
                   >
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-primary" 
+                    (click)="toggleToMap()"
+                    title="Pick on Map"
+                  >
+                    <i class="fas fa-map"></i>
+                  </button>
                 </div>
                 <div class="invalid-feedback" *ngIf="fareForm.get('toLocation')?.invalid && fareForm.get('toLocation')?.touched">
                   Drop location is required
@@ -87,10 +106,13 @@
                   >
                     <i class="fas fa-map-marker-alt text-primary me-2"></i>
                     <div>
-                      <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
-                      <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+                      <div class="prediction-main">{{ prediction.structured_formatting?.main_text || prediction.description }}</div>
+                      <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text || '' }}</div>
                     </div>
                   </div>
+                </div>
+                <div class="map-container mt-2" *ngIf="showToMap">
+                  <div id="toMapContainer" style="height: 300px; border-radius: 10px;"></div>
                 </div>
               </div>
               

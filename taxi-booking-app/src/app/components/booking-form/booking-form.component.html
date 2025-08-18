@@ -23,6 +23,14 @@
           >
             <i class="fas fa-crosshairs"></i>
           </button>
+          <button 
+            type="button" 
+            class="btn btn-outline-primary" 
+            (click)="togglePickupMap()"
+            title="Pick on Map"
+          >
+            <i class="fas fa-map"></i>
+          </button>
         </div>
         <div class="invalid-feedback" *ngIf="getFieldError('pickupLocation')">
           {{ getFieldError('pickupLocation') }}
@@ -37,10 +45,13 @@
           >
             <i class="fas fa-map-marker-alt text-primary me-2"></i>
             <div>
-              <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
-              <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+              <div class="prediction-main">{{ prediction.structured_formatting?.main_text || prediction.description }}</div>
+              <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text || '' }}</div>
             </div>
           </div>
+        </div>
+        <div class="map-container mt-2" *ngIf="showPickupMap">
+          <div id="pickupMapContainer" style="height: 300px; border-radius: 10px;"></div>
         </div>
       </div>
 
@@ -56,6 +67,14 @@
             placeholder="Enter drop location"
             [class.is-invalid]="bookingForm.get('dropLocation')?.invalid && bookingForm.get('dropLocation')?.touched"
           >
+          <button 
+            type="button" 
+            class="btn btn-outline-primary" 
+            (click)="toggleDropMap()"
+            title="Pick on Map"
+          >
+            <i class="fas fa-map"></i>
+          </button>
         </div>
         <div class="invalid-feedback" *ngIf="getFieldError('dropLocation')">
           {{ getFieldError('dropLocation') }}
@@ -70,10 +89,13 @@
           >
             <i class="fas fa-map-marker-alt text-primary me-2"></i>
             <div>
-              <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
-              <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+              <div class="prediction-main">{{ prediction.structured_formatting?.main_text || prediction.description }}</div>
+              <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text || '' }}</div>
             </div>
           </div>
+        </div>
+        <div class="map-container mt-2" *ngIf="showDropMap">
+          <div id="dropMapContainer" style="height: 300px; border-radius: 10px;"></div>
         </div>
       </div>
 

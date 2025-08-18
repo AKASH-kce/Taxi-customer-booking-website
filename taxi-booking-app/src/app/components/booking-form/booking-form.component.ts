@@ -6,7 +6,7 @@ import { LoadingSpinnerComponent } from '../loading-spinner/loading-spinner.comp
 import { MapService, Location } from '../../services/map.service';
 import { BookingService } from '../../services/booking.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import * as L from 'leaflet';
 
 // Google Maps type declarations
 declare global {
@@ -41,6 +41,11 @@ export class BookingFormComponent implements OnInit, OnDestroy {
   estimatedFare: number = 0;
   showFareEstimate = false;
   private destroy$ = new Subject<void>();
+  // Map pickers
+  showPickupMap = false;
+  showDropMap = false;
+  private pickupLeafletMap: L.Map | null = null;
+  private dropLeafletMap: L.Map | null = null;
 
   vehicleTypes: VehicleType[] = [
     { 
@@ -115,7 +120,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.setupFormListeners();
-    this.loadGoogleMaps();
   }
 
   ngOnDestroy(): void {
@@ -172,17 +176,6 @@ export class BookingFormComponent implements OnInit, OnDestroy {
       .subscribe(() => this.calculateFare());
   }
 
-  private loadGoogleMaps(): void {
-    // Load Google Maps script using environment configuration
-    this.mapService.loadGoogleMapsScript(environment.googleMapsApiKey)
-      .then(() => {
-        console.log('Google Maps loaded successfully');
-      })
-      .catch(error => {
-        console.error('Failed to load Google Maps:', error);
-      });
-  }
-
   getCurrentLocation(): void {
     this.mapService.getCurrentLocation().subscribe({
       next: (location) => {
@@ -197,6 +190,68 @@ export class BookingFormComponent implements OnInit, OnDestroy {
         alert('Unable to get your current location. Please enter manually.');
       }
     });
+  }
+
+  togglePickupMap(): void {
+    this.showPickupMap = !this.showPickupMap;
+    setTimeout(() => {
+      if (this.showPickupMap && !this.pickupLeafletMap) {
+        this.pickupLeafletMap = this.initLeafletMap('pickupMapContainer', (lat, lng) => {
+          this.mapService.reverseGeocode(lat, lng).subscribe({
+            next: addr => {
+              this.bookingForm.patchValue({ pickupLocation: addr });
+              this.calculateFare();
+            },
+            error: () => {
+              this.bookingForm.patchValue({ pickupLocation: `${lat.toFixed(6)}, ${lng.toFixed(6)}` });
+              this.calculateFare();
+            }
+          });
+        });
+      }
+      if (this.pickupLeafletMap) {
+        this.pickupLeafletMap.invalidateSize();
+      }
+    });
+  }
+
+  toggleDropMap(): void {
+    this.showDropMap = !this.showDropMap;
+    setTimeout(() => {
+      if (this.showDropMap && !this.dropLeafletMap) {
+        this.dropLeafletMap = this.initLeafletMap('dropMapContainer', (lat, lng) => {
+          this.mapService.reverseGeocode(lat, lng).subscribe({
+            next: addr => {
+              this.bookingForm.patchValue({ dropLocation: addr });
+              this.calculateFare();
+            },
+            error: () => {
+              this.bookingForm.patchValue({ dropLocation: `${lat.toFixed(6)}, ${lng.toFixed(6)}` });
+              this.calculateFare();
+            }
+          });
+        });
+      }
+      if (this.dropLeafletMap) {
+        this.dropLeafletMap.invalidateSize();
+      }
+    });
+  }
+
+  private initLeafletMap(containerId: string, onPick: (lat: number, lng: number) => void): L.Map {
+    const map = L.map(containerId).setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    let marker: L.CircleMarker | null = null;
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      if (marker) marker.remove();
+      marker = L.circleMarker([lat, lng], { radius: 8, color: '#007bff', fillColor: '#007bff', fillOpacity: 0.6 }).addTo(map);
+      onPick(lat, lng);
+    });
+    return map;
   }
 
   private getPlacePredictions(input: string, type: 'pickup' | 'drop'): void {

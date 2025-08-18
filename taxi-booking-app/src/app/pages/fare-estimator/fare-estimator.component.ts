@@ -7,7 +7,7 @@ import { FooterComponent } from '../../components/footer/footer.component';
 import { MapService, Location } from '../../services/map.service';
 import { BookingService } from '../../services/booking.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
-import { environment } from '../../../environments/environment';
+import * as L from 'leaflet';
 
 @Component({
   selector: 'app-fare-estimator',
@@ -24,6 +24,10 @@ export class FareEstimatorComponent implements OnInit, OnDestroy {
   fromPredictions: any[] = [];
   toPredictions: any[] = [];
   private destroy$ = new Subject<void>();
+  showFromMap = false;
+  showToMap = false;
+  private fromLeafletMap: L.Map | null = null;
+  private toLeafletMap: L.Map | null = null;
 
   vehicleTypes = [
     {
@@ -88,7 +92,6 @@ export class FareEstimatorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.setupFormListeners();
-    this.loadGoogleMaps();
   }
 
   ngOnDestroy(): void {
@@ -125,16 +128,6 @@ export class FareEstimatorComponent implements OnInit, OnDestroy {
         } else {
           this.toPredictions = [];
         }
-      });
-  }
-
-  private loadGoogleMaps(): void {
-    this.mapService.loadGoogleMapsScript(environment.googleMapsApiKey)
-      .then(() => {
-        console.log('Google Maps loaded successfully');
-      })
-      .catch(error => {
-        console.error('Failed to load Google Maps:', error);
       });
   }
 
@@ -176,6 +169,52 @@ export class FareEstimatorComponent implements OnInit, OnDestroy {
       this.fareForm.patchValue({ toLocation: prediction.description });
       this.toPredictions = [];
     }
+  }
+
+  toggleFromMap(): void {
+    this.showFromMap = !this.showFromMap;
+    setTimeout(() => {
+      if (this.showFromMap && !this.fromLeafletMap) {
+        this.fromLeafletMap = this.initLeafletMap('fromMapContainer', (lat, lng) => {
+          this.mapService.reverseGeocode(lat, lng).subscribe({
+            next: addr => this.fareForm.patchValue({ fromLocation: addr }),
+            error: () => this.fareForm.patchValue({ fromLocation: `${lat.toFixed(6)}, ${lng.toFixed(6)}` })
+          });
+        });
+      }
+      this.fromLeafletMap?.invalidateSize();
+    });
+  }
+
+  toggleToMap(): void {
+    this.showToMap = !this.showToMap;
+    setTimeout(() => {
+      if (this.showToMap && !this.toLeafletMap) {
+        this.toLeafletMap = this.initLeafletMap('toMapContainer', (lat, lng) => {
+          this.mapService.reverseGeocode(lat, lng).subscribe({
+            next: addr => this.fareForm.patchValue({ toLocation: addr }),
+            error: () => this.fareForm.patchValue({ toLocation: `${lat.toFixed(6)}, ${lng.toFixed(6)}` })
+          });
+        });
+      }
+      this.toLeafletMap?.invalidateSize();
+    });
+  }
+
+  private initLeafletMap(containerId: string, onPick: (lat: number, lng: number) => void): L.Map {
+    const map = L.map(containerId).setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    let marker: L.CircleMarker | null = null;
+    map.on('click', (e: L.LeafletMouseEvent) => {
+      const { lat, lng } = e.latlng;
+      if (marker) marker.remove();
+      marker = L.circleMarker([lat, lng], { radius: 8, color: '#007bff', fillColor: '#007bff', fillOpacity: 0.6 }).addTo(map);
+      onPick(lat, lng);
+    });
+    return map;
   }
 
   calculateFare(): void {

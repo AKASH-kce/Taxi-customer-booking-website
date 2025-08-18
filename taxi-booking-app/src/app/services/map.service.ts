@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, from, of } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 export interface Location {
   lat: number;
@@ -25,21 +24,8 @@ declare global {
   providedIn: 'root'
 })
 export class MapService {
-  private geocoder: any = null;
-  private directionsService: any = null;
-  private autocompleteService: any = null;
-
-  constructor() {
-    this.initializeGoogleMaps();
-  }
-
-  private initializeGoogleMaps(): void {
-    if (typeof window !== 'undefined' && window.google && window.google.maps) {
-      this.geocoder = new window.google.maps.Geocoder();
-      this.directionsService = new window.google.maps.DirectionsService();
-      this.autocompleteService = new window.google.maps.places.AutocompleteService();
-    }
-  }
+  private readonly nominatimBase = 'https://nominatim.openstreetmap.org';
+  private readonly osrmBase = 'https://router.project-osrm.org';
 
   // Get current location using browser geolocation
   getCurrentLocation(): Observable<Location> {
@@ -86,103 +72,92 @@ export class MapService {
   // Geocode address to coordinates
   geocodeAddress(address: string): Observable<Location> {
     return new Observable(observer => {
-      if (!this.geocoder) {
-        observer.error('Google Maps not loaded');
-        return;
-      }
-
-      this.geocoder.geocode({ address }, (results: any, status: any) => {
-        if (status === 'OK' && results && results[0]) {
-          const location = results[0].geometry.location;
-          const locationData: Location = {
-            lat: location.lat(),
-            lng: location.lng(),
-            address: results[0].formatted_address
-          };
-          observer.next(locationData);
-          observer.complete();
-        } else {
-          observer.error('Geocoding failed: ' + status);
-        }
-      });
+      const url = `${this.nominatimBase}/search?format=json&limit=1&q=${encodeURIComponent(address)}`;
+      fetch(url, { headers: { 'Accept-Language': 'en' } })
+        .then(res => res.json())
+        .then((results: any[]) => {
+          if (results && results.length > 0) {
+            const r = results[0];
+            const loc: Location = {
+              lat: parseFloat(r.lat),
+              lng: parseFloat(r.lon),
+              address: r.display_name
+            };
+            observer.next(loc);
+            observer.complete();
+          } else {
+            observer.error('No results from Nominatim');
+          }
+        })
+        .catch(err => observer.error(err));
     });
   }
 
   // Reverse geocode coordinates to address
   reverseGeocode(lat: number, lng: number): Observable<string> {
     return new Observable(observer => {
-      if (!this.geocoder) {
-        observer.error('Google Maps not loaded');
-        return;
-      }
-
-      this.geocoder.geocode({ location: { lat, lng } }, (results: any, status: any) => {
-        if (status === 'OK' && results && results[0]) {
-          observer.next(results[0].formatted_address);
-          observer.complete();
-        } else {
-          observer.error('Reverse geocoding failed: ' + status);
-        }
-      });
+      const url = `${this.nominatimBase}/reverse?format=json&lat=${lat}&lon=${lng}`;
+      fetch(url, { headers: { 'Accept-Language': 'en' } })
+        .then(res => res.json())
+        .then((result: any) => {
+          if (result && result.display_name) {
+            observer.next(result.display_name);
+            observer.complete();
+          } else {
+            observer.error('Reverse geocoding failed');
+          }
+        })
+        .catch(err => observer.error(err));
     });
   }
 
   // Get route information between two locations
   getRouteInfo(origin: Location, destination: Location): Observable<RouteInfo> {
     return new Observable(observer => {
-      if (!this.directionsService) {
-        observer.error('Google Maps not loaded');
-        return;
-      }
-
-      const request = {
-        origin: { lat: origin.lat, lng: origin.lng },
-        destination: { lat: destination.lat, lng: destination.lng },
-        travelMode: window.google.maps.TravelMode.DRIVING,
-        unitSystem: window.google.maps.UnitSystem.METRIC
-      };
-
-      this.directionsService.route(request, (result: any, status: any) => {
-        if (status === 'OK' && result) {
-          const route = result.routes[0];
-          const leg = route.legs[0];
-          
-          const routeInfo: RouteInfo = {
-            distance: leg.distance.value / 1000, // Convert meters to kilometers
-            duration: leg.duration.value / 60, // Convert seconds to minutes
-            polyline: this.decodePolyline(route.overview_polyline.encoded)
-          };
-          
-          observer.next(routeInfo);
-          observer.complete();
-        } else {
-          observer.error('Directions request failed: ' + status);
-        }
-      });
+      const url = `${this.osrmBase}/route/v1/driving/${origin.lng},${origin.lat};${destination.lng},${destination.lat}?overview=false&alternatives=false&steps=false`;
+      fetch(url)
+        .then(res => res.json())
+        .then((json: any) => {
+          if (json && json.code === 'Ok' && json.routes && json.routes[0]) {
+            const r = json.routes[0];
+            const routeInfo: RouteInfo = {
+              distance: (r.distance || 0) / 1000,
+              duration: (r.duration || 0) / 60,
+              polyline: []
+            };
+            observer.next(routeInfo);
+            observer.complete();
+          } else {
+            observer.error('OSRM routing failed');
+          }
+        })
+        .catch(err => observer.error(err));
     });
   }
 
   // Get place predictions for autocomplete
   getPlacePredictions(input: string): Observable<any[]> {
     return new Observable(observer => {
-      if (!this.autocompleteService) {
-        observer.error('Google Maps not loaded');
-        return;
-      }
-
-      this.autocompleteService.getPlacePredictions({
-        input,
-        componentRestrictions: { country: 'IN' }, // Restrict to India
-        types: ['geocode', 'establishment']
-      }, (predictions: any, status: any) => {
-        if (status === 'OK' && predictions) {
-          observer.next(predictions);
+      const url = `${this.nominatimBase}/search?format=json&addressdetails=1&limit=5&q=${encodeURIComponent(input)}`;
+      fetch(url, { headers: { 'Accept-Language': 'en' } })
+        .then(res => res.json())
+        .then((results: any[]) => {
+          const mapped = (results || []).map(r => ({
+            description: r.display_name,
+            lat: parseFloat(r.lat),
+            lon: parseFloat(r.lon),
+            structured_formatting: {
+              main_text: r.address?.road || r.address?.neighbourhood || r.address?.suburb || r.address?.city || r.address?.town || r.address?.village || 'Location',
+              secondary_text: r.display_name
+            }
+          }));
+          observer.next(mapped);
           observer.complete();
-        } else {
+        })
+        .catch(() => {
           observer.next([]);
           observer.complete();
-        }
-      });
+        });
     });
   }
 
@@ -203,70 +178,8 @@ export class MapService {
     return deg * (Math.PI/180);
   }
 
-  // Decode Google's polyline encoding
-  private decodePolyline(encoded: string): any[] {
-    const poly: any[] = [];
-    let index = 0, len = encoded.length;
-    let lat = 0, lng = 0;
-
-    while (index < len) {
-      let shift = 0, result = 0;
-
-      do {
-        let b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (result >= 0x20);
-
-      let dlat = ((result & 1) ? ~(result >> 1) : (result >> 1));
-      lat += dlat;
-
-      shift = 0;
-      result = 0;
-
-      do {
-        let b = encoded.charCodeAt(index++) - 63;
-        result |= (b & 0x1f) << shift;
-        shift += 5;
-      } while (result >= 0x20);
-
-      let dlng = ((result & 1) ? ~(result >> 1) : (result >> 1));
-      lng += dlng;
-
-      if (window.google && window.google.maps) {
-        poly.push(new window.google.maps.LatLng(lat / 1E5, lng / 1E5));
-      } else {
-        poly.push({ lat: lat / 1E5, lng: lng / 1E5 });
-      }
-    }
-
-    return poly;
-  }
-
-  // Load Google Maps script
-  loadGoogleMapsScript(apiKey: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (typeof window !== 'undefined' && window.google && window.google.maps) {
-        this.initializeGoogleMaps();
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        this.initializeGoogleMaps();
-        resolve();
-      };
-      
-      script.onerror = () => {
-        reject(new Error('Failed to load Google Maps'));
-      };
-
-      document.head.appendChild(script);
-    });
+  // No-op: kept for backward compatibility when switching from Google Maps
+  loadGoogleMapsScript(_apiKey: string): Promise<void> {
+    return Promise.resolve();
   }
 }
