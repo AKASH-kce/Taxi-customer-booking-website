@@ -226,12 +226,65 @@
     </div>
   </form>
 
-  <div class="qr-img-for-payment">
-    <p>payment</p>
-    <div id="imgBox">
-      <img [src]="upiImageURL" id="qrImage">
+
+  <div class="qr-popup-overlay" *ngIf="showQRPopup">
+    <div class="qr-popup">
+      <button class="close-btn" (click)="closeQRPopup()">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <div class="qr-header text-center">
+        <h4><i class="fas fa-qrcode me-2"></i> Complete Payment</h4>
+        <p class="mb-0">Scan this QR code using any UPI app to confirm your booking</p>
+      </div>
+
+      <div class="qr-content">
+        <!-- QR Code Container - Centered -->
+        <div class="qr-image-container text-center">
+          <div class="qr-frame">
+            <img [src]="upiImageURL" alt="UPI Payment QR Code">
+          </div>
+
+          <!-- Payment Details - Centered below QR -->
+          <div class="payment-details">
+            <div class="detail-item">
+              <span class="label">Booking ID:</span>
+              <span class="value">{{ currentBookingId }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Amount:</span>
+              <span class="value">₹{{ estimatedFare | number:'1.0-0' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">UPI ID:</span>
+              <span class="value">akashkce123@okicici</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instructions - Centered below details -->
+        <div class="instructions text-center">
+          <p class="mb-2"><strong>How to pay:</strong></p>
+          <ol class="text-start">
+            <li>Open any UPI payment app on your phone</li>
+            <li>Tap on 'Scan QR Code'</li>
+            <li>Point your camera at this code</li>
+            <li>Confirm the payment details</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="qr-footer text-center">
+        <button class="btn btn-success" (click)="confirmPayment()">
+          <i class="fas fa-check-circle me-2"></i>I've Paid
+        </button>
+        <button class="btn btn-outline-secondary ms-2" (click)="closeQRPopup()">
+          Cancel Payment
+        </button>
+      </div>
     </div>
   </div>
+
   <!-- Loading Spinner -->
   <app-loading-spinner *ngIf="isLoading" [message]="'Processing your booking...'" [showOverlay]="true">
   </app-loading-spinner>

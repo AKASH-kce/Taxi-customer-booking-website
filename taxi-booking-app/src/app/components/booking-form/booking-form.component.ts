@@ -442,6 +442,15 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     return name.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
   }
 
+showUPIQRCode(link: string) {
+  this.upiImageURL="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data="+link;
+}
+
+showQRPopup = false;
+currentBookingId = '';
+currentBookingData: Booking | null = null;
+
+
 payWithUPI() {
   if (this.bookingForm.invalid) {
     this.markFormGroupTouched();
@@ -449,12 +458,12 @@ payWithUPI() {
   }
 
   this.isLoading = true;
+  this.currentBookingId = this.generateBookingId();
 
   const formValue = this.bookingForm.value;
-  const bookingId = this.generateBookingId(); // single booking ID
-  const bookingData: Booking = {
-    id: bookingId,
-    bookingId: bookingId,
+  this.currentBookingData = {
+    id: this.currentBookingId,
+    bookingId: this.currentBookingId,
     customerName: formValue.passengerName,
     customerPhone: formValue.passengerPhone,
     customerEmail: formValue.passengerEmail,
@@ -474,30 +483,42 @@ payWithUPI() {
     notes: formValue.specialInstructions
   };
 
-  // Emit booking first
-  this.bookingSubmitted.emit(bookingData);
-
-  // Get UPI link
-  const upiLink = this.bookingPaymentservice.getUPILink(bookingId, bookingData.estimatedFare);
-
-  // Detect mobile vs desktop
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    // Mobile: open UPI link in new window/tab without leaving page
-    window.open(upiLink, '_blank');
-  } else {
-    // Desktop: show QR code in page
-    this.showUPIQRCode(upiLink);
-  }
-
-  this.isLoading = false;
+  // Generate UPI link and QR code
+  const upiLink = this.bookingPaymentservice.getUPILink(
+    this.currentBookingId, 
+    this.currentBookingData.estimatedFare
+  );
+  
+  this.showUPIQRCode(upiLink);
+  
+  setTimeout(() => {
+    this.showQRPopup = true;
+    this.isLoading = false;
+  }, 300);
 }
 
-
-// Example QR code function (use ngx-qrcode or similar library)
-showUPIQRCode(link: string) {
-  this.upiImageURL="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data="+link;
+closeQRPopup() {
+  this.showQRPopup = false;
+  this.currentBookingData = null;
 }
 
+confirmPayment() {
+  if (!this.currentBookingData) return;
+  
+  this.isLoading = true;
+  
+  this.currentBookingData.paymentStatus = 'paid';
+  
+  setTimeout(() => {
+    // this.bookingSubmitted.emit(this.currentBookingData);
+    this.showQRPopup = false;
+    this.isLoading = false;
+    this.bookingForm.reset();
+    this.showFareEstimate = false;
+    this.estimatedFare = 0;
+    alert(`Payment successful! Your booking ID: ${this.currentBookingId}`);
+    
+    this.currentBookingData = null;
+  }, 1500);
+}
 }
