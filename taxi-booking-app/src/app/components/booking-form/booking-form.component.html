@@ -15,9 +15,32 @@
             placeholder="Enter pickup location"
             [class.is-invalid]="bookingForm.get('pickupLocation')?.invalid && bookingForm.get('pickupLocation')?.touched"
           >
+          <button 
+            type="button" 
+            class="btn btn-outline-primary" 
+            (click)="getCurrentLocation()"
+            title="Use Current Location"
+          >
+            <i class="fas fa-crosshairs"></i>
+          </button>
         </div>
         <div class="invalid-feedback" *ngIf="getFieldError('pickupLocation')">
           {{ getFieldError('pickupLocation') }}
+        </div>
+        
+        <!-- Location Predictions -->
+        <div class="predictions-dropdown" *ngIf="pickupPredictions.length > 0">
+          <div 
+            class="prediction-item" 
+            *ngFor="let prediction of pickupPredictions"
+            (click)="selectPlacePrediction(prediction, 'pickup')"
+          >
+            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+            <div>
+              <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
+              <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -36,6 +59,21 @@
         </div>
         <div class="invalid-feedback" *ngIf="getFieldError('dropLocation')">
           {{ getFieldError('dropLocation') }}
+        </div>
+        
+        <!-- Location Predictions -->
+        <div class="predictions-dropdown" *ngIf="dropPredictions.length > 0">
+          <div 
+            class="prediction-item" 
+            *ngFor="let prediction of dropPredictions"
+            (click)="selectPlacePrediction(prediction, 'drop')"
+          >
+            <i class="fas fa-map-marker-alt text-primary me-2"></i>
+            <div>
+              <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
+              <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -125,7 +163,7 @@
 
       <!-- Passenger Phone -->
       <div class="col-md-6 mb-3">
-        <label class="form-label">Phone Number *</label>
+        <label class="form-label">Passenger Phone *</label>
         <input 
           type="tel" 
           class="form-control" 
@@ -139,8 +177,8 @@
       </div>
 
       <!-- Passenger Email -->
-      <div class="col-md-6 mb-3">
-        <label class="form-label">Email Address *</label>
+      <div class="col-12 mb-3">
+        <label class="form-label">Passenger Email *</label>
         <input 
           type="email" 
           class="form-control" 
@@ -154,34 +192,58 @@
       </div>
 
       <!-- Special Instructions -->
-      <div class="col-md-6 mb-3">
+      <div class="col-12 mb-3">
         <label class="form-label">Special Instructions</label>
         <textarea 
           class="form-control" 
+          rows="3" 
           formControlName="specialInstructions"
-          rows="3"
-          placeholder="Any special requirements or instructions"
+          placeholder="Any special instructions or requirements"
         ></textarea>
       </div>
-    </div>
 
-    <!-- Submit Button -->
-    <div class="text-center mt-4">
-      <button 
-        type="submit" 
-        class="btn btn-primary btn-lg px-5"
-        [disabled]="isLoading"
-      >
-        <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
-        {{ isLoading ? 'Booking...' : 'Book Now' }}
-      </button>
+      <!-- Fare Estimate -->
+      <div class="col-12 mb-3" *ngIf="showFareEstimate || isCalculatingFare">
+        <div class="fare-estimate-card">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+              <i class="fas fa-calculator text-primary me-2"></i>
+              Estimated Fare
+            </h5>
+            <div *ngIf="isCalculatingFare" class="text-primary">
+              <i class="fas fa-spinner fa-spin me-2"></i>
+              Calculating...
+            </div>
+          </div>
+          <div *ngIf="showFareEstimate" class="fare-amount">
+            <span class="currency">₹</span>
+            <span class="amount">{{ estimatedFare }}</span>
+            <span class="unit">approx.</span>
+          </div>
+          <small class="text-muted">
+            *Final fare may vary based on actual route and traffic conditions
+          </small>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="col-12 text-center">
+        <button 
+          type="submit" 
+          class="btn btn-primary btn-lg"
+          [disabled]="bookingForm.invalid || isLoading"
+        >
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-2"></span>
+          {{ isLoading ? 'Booking...' : 'Book Now' }}
+        </button>
+      </div>
     </div>
   </form>
-  
-  <!-- Loading Overlay -->
+
+  <!-- Loading Spinner -->
   <app-loading-spinner 
-    [isLoading]="isLoading" 
-    message="Processing your booking..."
-    [overlay]="true">
+    *ngIf="isLoading" 
+    [message]="'Processing your booking...'"
+    [showOverlay]="true">
   </app-loading-spinner>
 </div>

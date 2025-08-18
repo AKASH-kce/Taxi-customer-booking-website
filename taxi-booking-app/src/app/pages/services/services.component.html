@@ -1,0 +1,214 @@
+<app-header></app-header>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto text-center">
+        <h1>Our Services</h1>
+        <p>Comprehensive taxi services for all your travel needs</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Services Grid -->
+<section class="services-grid py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6 col-lg-4 mb-4" *ngFor="let service of services">
+        <div class="service-card">
+          <div class="service-icon">
+            <i [class]="service.icon"></i>
+          </div>
+          <h4>{{ service.title }}</h4>
+          <p>{{ service.description }}</p>
+          <ul class="service-features">
+            <li *ngFor="let feature of service.features">{{ feature }}</li>
+          </ul>
+          <div class="service-actions">
+            <a routerLink="/home" class="btn btn-primary">Book Now</a>
+            <a [href]="'https://wa.me/919876543210?text=I want to know more about ' + service.title" target="_blank" class="btn btn-success">
+              <i class="fab fa-whatsapp"></i> Enquire
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Service Details -->
+<section class="service-details py-5 bg-light">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2>Service Details</h2>
+        <p class="text-muted">Learn more about our specialized services</p>
+      </div>
+    </div>
+    
+    <!-- Local Taxi Service -->
+    <div class="row mb-5">
+      <div class="col-md-6">
+        <div class="service-detail-card">
+          <h3><i class="fas fa-car text-primary"></i> Local Taxi Service</h3>
+          <p>Quick and reliable local transportation within the city limits. Perfect for daily commutes, shopping trips, and short-distance travel.</p>
+          <div class="service-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Same day booking available</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Professional drivers</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Fixed pricing</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>24/7 availability</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="service-image">
+          <div class="image-placeholder">
+            <i class="fas fa-car fa-4x text-muted"></i>
+            <p>Local Taxi Service</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Airport Transfer Service -->
+    <div class="row mb-5">
+      <div class="col-md-6 order-md-2">
+        <div class="service-detail-card">
+          <h3><i class="fas fa-plane text-primary"></i> Airport Transfer Service</h3>
+          <p>Comfortable and timely airport pickup and drop services. We ensure you never miss your flight with our punctual service.</p>
+          <div class="service-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Flight tracking</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Meet & greet service</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Luggage assistance</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Fixed airport rates</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6 order-md-1">
+        <div class="service-image">
+          <div class="image-placeholder">
+            <i class="fas fa-plane fa-4x text-muted"></i>
+            <p>Airport Transfer Service</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Outstation Travel -->
+    <div class="row mb-5">
+      <div class="col-md-6">
+        <div class="service-detail-card">
+          <h3><i class="fas fa-route text-primary"></i> Outstation Travel</h3>
+          <p>Long-distance travel with experienced drivers. Perfect for business trips, family vacations, and inter-city travel.</p>
+          <div class="service-highlights">
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Experienced drivers</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>Comfortable vehicles</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>GPS tracking</span>
+            </div>
+            <div class="highlight-item">
+              <i class="fas fa-check text-success"></i>
+              <span>24/7 support</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="service-image">
+          <div class="image-placeholder">
+            <i class="fas fa-route fa-4x text-muted"></i>
+            <p>Outstation Travel</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Section -->
+<section class="pricing-section py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2>Service Pricing</h2>
+        <p class="text-muted">Transparent and competitive pricing for all our services</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-4" *ngFor="let pricing of pricingPlans">
+        <div class="pricing-card">
+          <div class="pricing-header">
+            <h4>{{ pricing.name }}</h4>
+            <div class="price">
+              <span class="currency">₹</span>
+              <span class="amount">{{ pricing.basePrice }}</span>
+              <span class="unit">/km</span>
+            </div>
+          </div>
+          <ul class="pricing-features">
+            <li *ngFor="let feature of pricing.features">
+              <i class="fas fa-check text-success"></i>
+              {{ feature }}
+            </li>
+          </ul>
+          <a routerLink="/home" class="btn btn-primary w-100">Book Now</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section py-5 bg-primary text-white">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto text-center">
+        <h2>Ready to Book Your Ride?</h2>
+        <p class="lead">Choose from our wide range of services and book your taxi today</p>
+        <div class="cta-buttons">
+          <a routerLink="/home" class="btn btn-light btn-lg me-3">
+            <i class="fas fa-car"></i> Book Now
+          </a>
+          <a href="https://wa.me/919876543210" target="_blank" class="btn btn-success btn-lg">
+            <i class="fab fa-whatsapp"></i> Contact Us
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

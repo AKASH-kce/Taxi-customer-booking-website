@@ -1,0 +1,259 @@
+<app-header></app-header>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto text-center">
+        <h1>Track Your Booking</h1>
+        <p>Check the status of your taxi booking</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Booking Search -->
+<section class="booking-search py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="search-card">
+          <h3 class="text-center mb-4">Search Your Booking</h3>
+          
+          <form [formGroup]="searchForm" (ngSubmit)="searchBooking()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Booking ID</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-search"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    formControlName="bookingId"
+                    placeholder="Enter your booking ID"
+                    [class.is-invalid]="searchForm.get('bookingId')?.invalid && searchForm.get('bookingId')?.touched"
+                  >
+                </div>
+                <div class="invalid-feedback" *ngIf="searchForm.get('bookingId')?.invalid && searchForm.get('bookingId')?.touched">
+                  Booking ID is required
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Phone Number</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                  <input 
+                    type="tel" 
+                    class="form-control" 
+                    formControlName="phoneNumber"
+                    placeholder="Enter your phone number"
+                    [class.is-invalid]="searchForm.get('phoneNumber')?.invalid && searchForm.get('phoneNumber')?.touched"
+                  >
+                </div>
+                <div class="invalid-feedback" *ngIf="searchForm.get('phoneNumber')?.invalid && searchForm.get('phoneNumber')?.touched">
+                  Valid phone number is required
+                </div>
+              </div>
+            </div>
+            
+            <div class="text-center mt-4">
+              <button 
+                type="submit" 
+                class="btn btn-primary btn-lg"
+                [disabled]="searchForm.invalid || isSearching"
+              >
+                <span *ngIf="isSearching" class="spinner-border spinner-border-sm me-2"></span>
+                {{ isSearching ? 'Searching...' : 'Search Booking' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Booking Status Result -->
+<section class="booking-status py-5 bg-light" *ngIf="bookingDetails">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-10 mx-auto">
+        <div class="status-card">
+          <div class="status-header">
+            <h3>Booking Status</h3>
+            <div class="booking-id">Booking ID: {{ bookingDetails.id }}</div>
+          </div>
+          
+          <!-- Status Timeline -->
+          <div class="status-timeline">
+            <div class="timeline-item" [class.active]="bookingDetails.status === 'confirmed'" [class.completed]="getStatusOrder(bookingDetails.status) > getStatusOrder('confirmed')">
+              <div class="timeline-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="timeline-content">
+                <h5>Booking Confirmed</h5>
+                <p>Your booking has been confirmed and assigned to a driver</p>
+                <small>{{ bookingDetails.confirmedAt | date:'medium' }}</small>
+              </div>
+            </div>
+            
+            <div class="timeline-item" [class.active]="bookingDetails.status === 'driver-assigned'" [class.completed]="getStatusOrder(bookingDetails.status) > getStatusOrder('driver-assigned')">
+              <div class="timeline-icon">
+                <i class="fas fa-user-tie"></i>
+              </div>
+              <div class="timeline-content">
+                <h5>Driver Assigned</h5>
+                <p>Driver {{ bookingDetails.driverName }} has been assigned to your booking</p>
+                <small>{{ bookingDetails.driverAssignedAt | date:'medium' }}</small>
+              </div>
+            </div>
+            
+            <div class="timeline-item" [class.active]="bookingDetails.status === 'driver-enroute'" [class.completed]="getStatusOrder(bookingDetails.status) > getStatusOrder('driver-enroute')">
+              <div class="timeline-icon">
+                <i class="fas fa-car"></i>
+              </div>
+              <div class="timeline-content">
+                <h5>Driver En Route</h5>
+                <p>Driver is on the way to your pickup location</p>
+                <small>{{ bookingDetails.driverEnrouteAt | date:'medium' }}</small>
+              </div>
+            </div>
+            
+            <div class="timeline-item" [class.active]="bookingDetails.status === 'arrived'" [class.completed]="getStatusOrder(bookingDetails.status) > getStatusOrder('arrived')">
+              <div class="timeline-icon">
+                <i class="fas fa-map-marker-alt"></i>
+              </div>
+              <div class="timeline-content">
+                <h5>Driver Arrived</h5>
+                <p>Driver has arrived at your pickup location</p>
+                <small>{{ bookingDetails.arrivedAt | date:'medium' }}</small>
+              </div>
+            </div>
+            
+            <div class="timeline-item" [class.active]="bookingDetails.status === 'in-progress'" [class.completed]="getStatusOrder(bookingDetails.status) > getStatusOrder('in-progress')">
+              <div class="timeline-icon">
+                <i class="fas fa-route"></i>
+              </div>
+              <div class="timeline-content">
+                <h5>Trip In Progress</h5>
+                <p>Your journey has started</p>
+                <small>{{ bookingDetails.startedAt | date:'medium' }}</small>
+              </div>
+            </div>
+            
+            <div class="timeline-item" [class.active]="bookingDetails.status === 'completed'" [class.completed]="getStatusOrder(bookingDetails.status) > getStatusOrder('completed')">
+              <div class="timeline-icon">
+                <i class="fas fa-flag-checkered"></i>
+              </div>
+              <div class="timeline-content">
+                <h5>Trip Completed</h5>
+                <p>Your journey has been completed successfully</p>
+                <small>{{ bookingDetails.completedAt | date:'medium' }}</small>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Booking Details -->
+          <div class="booking-details mt-5">
+            <div class="row">
+              <div class="col-md-6">
+                <h5>Trip Details</h5>
+                <div class="detail-item">
+                  <span class="label">From:</span>
+                  <span class="value">{{ bookingDetails.pickupLocation }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">To:</span>
+                  <span class="value">{{ bookingDetails.dropLocation }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Date:</span>
+                  <span class="value">{{ bookingDetails.pickupDate | date:'fullDate' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Time:</span>
+                  <span class="value">{{ bookingDetails.pickupTime }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Vehicle:</span>
+                  <span class="value">{{ bookingDetails.vehicleType }}</span>
+                </div>
+              </div>
+              
+              <div class="col-md-6">
+                <h5>Driver Information</h5>
+                <div class="detail-item" *ngIf="bookingDetails.driverName">
+                  <span class="label">Driver:</span>
+                  <span class="value">{{ bookingDetails.driverName }}</span>
+                </div>
+                <div class="detail-item" *ngIf="bookingDetails.driverPhone">
+                  <span class="label">Phone:</span>
+                  <span class="value">
+                    <a href="tel:{{ bookingDetails.driverPhone }}">{{ bookingDetails.driverPhone }}</a>
+                  </span>
+                </div>
+                <div class="detail-item" *ngIf="bookingDetails.vehicleNumber">
+                  <span class="label">Vehicle No:</span>
+                  <span class="value">{{ bookingDetails.vehicleNumber }}</span>
+                </div>
+                <div class="detail-item" *ngIf="bookingDetails.estimatedFare">
+                  <span class="label">Estimated Fare:</span>
+                  <span class="value">₹{{ bookingDetails.estimatedFare }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="action-buttons text-center mt-4">
+            <a href="tel:+919876543210" class="btn btn-primary btn-lg me-3">
+              <i class="fas fa-phone"></i> Call Support
+            </a>
+            <a href="https://wa.me/919876543210" target="_blank" class="btn btn-success btn-lg me-3">
+              <i class="fab fa-whatsapp"></i> WhatsApp Support
+            </a>
+            <button class="btn btn-outline-primary btn-lg" (click)="resetSearch()">
+              <i class="fas fa-search"></i> Search Another
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Recent Bookings -->
+<section class="recent-bookings py-5" *ngIf="recentBookings.length > 0">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2>Recent Bookings</h2>
+        <p class="text-muted">Your recent booking history</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-lg-4 mb-4" *ngFor="let booking of recentBookings">
+        <div class="recent-booking-card">
+          <div class="booking-header">
+            <h6>Booking ID: {{ booking.id }}</h6>
+            <span class="status-badge" [class]="'status-' + booking.status">
+              {{ booking.status }}
+            </span>
+          </div>
+          <div class="booking-info">
+            <p><strong>From:</strong> {{ booking.pickupLocation }}</p>
+            <p><strong>To:</strong> {{ booking.dropLocation }}</p>
+            <p><strong>Date:</strong> {{ booking.pickupDate | date:'shortDate' }}</p>
+            <p><strong>Fare:</strong> ₹{{ booking.estimatedFare }}</p>
+          </div>
+          <button class="btn btn-sm btn-outline-primary" (click)="loadBooking(booking.id)">
+            View Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>

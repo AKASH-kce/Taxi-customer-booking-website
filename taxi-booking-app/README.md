@@ -1,198 +1,173 @@
-# VK Drop Taxi - Professional Taxi Booking Website
+# VK Drop Taxi Booking Website
 
-A modern, mobile-first taxi booking website built with Angular 20. This application provides a comprehensive solution for taxi booking services with real-time features, fare estimation, and booking management.
+A modern, responsive taxi booking website built with Angular 17, featuring real-time map integration, location services, and accurate fare calculation.
 
 ## 🚀 Features
 
-### Core Features
-- **Real-time Booking System** - Instant taxi booking with live status updates
-- **Google Maps Integration** - Pickup and drop location selection with autocomplete
-- **Fare Estimator** - Real-time fare calculation based on distance and vehicle type
-- **Booking Status Tracking** - Track your booking status in real-time
-- **Mobile-First Design** - Responsive design optimized for mobile devices
+### ✨ Core Features
+- **Real-time Map Integration**: Google Maps API integration for accurate location services
+- **Location Access**: Get current location with browser geolocation
+- **Address Autocomplete**: Smart address suggestions powered by Google Places API
+- **Real-time Fare Calculation**: Accurate fare estimation based on actual route distance
+- **Responsive Design**: Mobile-first design that works on all devices
+- **Modern UI/UX**: Beautiful, intuitive interface with smooth animations
 
-### Trip Types
-- **Local Taxi** - City transportation services
-- **Outstation Travel** - Long-distance travel packages
-- **Hourly Rental** - Flexible hourly taxi rental
-- **Airport Transfer** - Airport pickup and drop services
-- **Corporate Travel** - Business travel solutions
+### 🗺️ Map Features
+- **Current Location Detection**: One-click pickup location detection
+- **Address Geocoding**: Convert addresses to coordinates and vice versa
+- **Route Optimization**: Get optimal routes with real traffic data
+- **Distance Calculation**: Accurate distance calculation using Google Maps API
+- **Place Autocomplete**: Smart address suggestions as you type
 
-### Vehicle Types
-- **Sedan** - Comfortable 4-seater vehicles
-- **SUV** - Spacious 6-seater vehicles
-- **Tempo Traveller** - Large 12-seater vehicles
-- **Luxury Cars** - Premium vehicles for special occasions
+### 💰 Fare Calculation
+- **Real-time Pricing**: Dynamic fare calculation based on actual distance
+- **Multiple Vehicle Types**: Different pricing for hatchback, sedan, SUV, and luxury
+- **Additional Charges**: Night charges, toll fees, and waiting time
+- **Trip Types**: Local, outstation, and hourly rental options
+- **Transparent Pricing**: Detailed fare breakdown with all charges
 
-### Communication Features
-- **WhatsApp Integration** - Direct WhatsApp booking and support
-- **Click-to-Call** - One-click calling functionality
-- **Email Enquiry Form** - Contact form for customer queries
-- **Social Media Integration** - Connect on various social platforms
-
-### Additional Features
-- **QR Code Generation** - Easy sharing and booking
-- **SEO Optimized** - Search engine friendly
-- **SSL Certificate Ready** - Secure HTTPS implementation
-- **Unlimited Bandwidth** - Scalable hosting ready
+### 📱 Booking Features
+- **Easy Booking Form**: Streamlined booking process with validation
+- **Real-time Updates**: Live fare updates as you change locations
+- **Booking Status Tracking**: Track your booking status in real-time
+- **WhatsApp Integration**: Direct WhatsApp booking option
+- **Email Notifications**: Booking confirmations and updates
 
 ## 🛠️ Technology Stack
 
-- **Frontend Framework**: Angular 20
-- **UI Framework**: Bootstrap 5.3.2
-- **Icons**: Font Awesome 6.5.1
-- **Styling**: SCSS with CSS Variables
-- **State Management**: Angular Services with RxJS
-- **Routing**: Angular Router
-- **Forms**: Angular Reactive Forms
+- **Frontend**: Angular 17 (Standalone Components)
+- **Styling**: SCSS with Bootstrap 5
+- **Maps**: Google Maps JavaScript API
+- **Icons**: FontAwesome
 - **Build Tool**: Angular CLI
+- **Package Manager**: npm
 
-## 📱 Pages & Components
+## 📋 Prerequisites
 
-### Main Pages
-1. **Home Page** (`/home`) - Main booking form and hero section
-2. **Fare Estimator** (`/fare-estimator`) - Calculate fares without booking
-3. **Services** (`/services`) - Showcase all taxi services
-4. **Packages** (`/packages`) - Tour, hourly, and travel packages
-5. **About Us** (`/about`) - Company information and team
-6. **Contact** (`/contact`) - Contact information and enquiry form
-7. **Booking Status** (`/booking-status`) - Track booking status
+Before running this application, you need:
 
-### Components
-- **Booking Form** - Main taxi booking interface
-- **Vehicle Selector** - Choose from available vehicle types
-- **Map Picker** - Google Maps integration for location selection
-- **Status Tracker** - Real-time booking status updates
+1. **Node.js** (v18 or higher)
+2. **npm** (v9 or higher)
+3. **Google Maps API Key** (see setup instructions below)
 
-## 🚀 Getting Started
+## 🔧 Setup Instructions
 
-### Prerequisites
-- Node.js (v18 or higher)
-- npm (v8 or higher)
-- Angular CLI (v20)
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd taxi-booking-app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Start the development server**
-   ```bash
-   npm start
-   ```
-
-4. **Open your browser**
-   Navigate to `http://localhost:4200`
-
-### Build for Production
-
+### 1. Clone the Repository
 ```bash
-npm run build
+git clone <repository-url>
+cd taxi-booking-app
 ```
 
-The build artifacts will be stored in the `dist/` directory.
-
-## 📁 Project Structure
-
-```
-src/
-├── app/
-│   ├── models/
-│   │   └── booking.model.ts          # Data models and interfaces
-│   ├── services/
-│   │   ├── booking.service.ts        # Booking management service
-│   │   └── maps.service.ts           # Google Maps integration
-│   ├── pages/
-│   │   ├── home/                     # Home page component
-│   │   ├── fare-estimator/           # Fare estimator component
-│   │   ├── services/                 # Services showcase
-│   │   ├── packages/                 # Travel packages
-│   │   ├── about/                    # About us page
-│   │   ├── contact/                  # Contact page
-│   │   └── booking-status/           # Booking tracking
-│   ├── components/                   # Reusable components
-│   ├── app.component.ts              # Main app component
-│   ├── app.routes.ts                 # Application routing
-│   ├── app.config.ts                 # App configuration
-│   └── app.scss                      # Global styles
-├── assets/                           # Static assets
-└── index.html                        # Main HTML file
+### 2. Install Dependencies
+```bash
+npm install
 ```
 
-## 🔧 Configuration
+### 3. Google Maps API Setup
 
-### Google Maps API
-To enable Google Maps functionality:
-
-1. Get a Google Maps API key from [Google Cloud Console](https://console.cloud.google.com/)
-2. Update the API key in `src/app/services/maps.service.ts`
-3. Enable required APIs:
+#### Step 1: Get Google Maps API Key
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the following APIs:
    - Maps JavaScript API
    - Places API
-   - Directions API
    - Geocoding API
+   - Directions API
+4. Create credentials (API Key)
+5. Restrict the API key to your domain for security
 
-### WhatsApp Integration
-Update WhatsApp numbers in components:
-- Main contact: `+919876543210`
-- Support: `+919876543210`
+#### Step 2: Configure API Key
+1. Open `src/environments/environment.ts`
+2. Replace `'YOUR_GOOGLE_MAPS_API_KEY'` with your actual API key:
 
-### Company Information
-Update company details in:
-- `src/app/pages/about/about.component.ts`
-- `src/app/pages/contact/contact.component.ts`
-- `src/app/app.html` (footer)
-
-## 📱 Mobile Optimization
-
-The website is fully optimized for mobile devices with:
-- Responsive design using Bootstrap 5
-- Touch-friendly interface
-- Mobile-first navigation
-- Optimized forms for mobile input
-- Fast loading times
-
-## 🎨 Customization
-
-### Colors
-Update CSS variables in `src/app/app.scss`:
-```scss
-:root {
-  --primary-color: #007bff;
-  --secondary-color: #28a745;
-  --accent-color: #ffc107;
-  // ... more variables
-}
+```typescript
+export const environment = {
+  production: false,
+  googleMapsApiKey: 'your-actual-api-key-here'
+};
 ```
 
-### Styling
-- Global styles: `src/app/app.scss`
-- Component-specific styles: Inline styles in components
-- Bootstrap customization: Override Bootstrap classes
+### 4. Run the Application
+```bash
+npm start
+```
 
-## 🔒 Security Features
+The application will be available at `http://localhost:4200`
 
-- Form validation and sanitization
-- XSS protection
-- CSRF protection ready
-- Secure routing
-- Input validation
+## 🗺️ Map Integration Details
 
-## 📊 Performance Optimization
+### Services Used
+- **Geocoding API**: Convert addresses to coordinates
+- **Places API**: Address autocomplete and place details
+- **Directions API**: Route calculation and distance estimation
+- **Maps JavaScript API**: Interactive maps and location services
 
-- Lazy loading of components
-- Optimized images and assets
-- Minified CSS and JavaScript
-- Efficient routing
-- Service worker ready
+### Features Implemented
+1. **Current Location Detection**
+   - Uses browser's Geolocation API
+   - Reverse geocoding to get address
+   - Fallback to coordinates if geocoding fails
+
+2. **Address Autocomplete**
+   - Real-time address suggestions
+   - Restricted to India for better results
+   - Structured formatting for better UX
+
+3. **Route Calculation**
+   - Real-time route optimization
+   - Distance and duration calculation
+   - Traffic-aware routing
+
+4. **Fare Calculation**
+   - Base fare + distance-based pricing
+   - Additional charges (night, toll, waiting)
+   - Real-time updates
+
+## 📱 Usage Guide
+
+### Booking a Taxi
+1. **Enter Pickup Location**
+   - Type address or click location button
+   - Select from autocomplete suggestions
+   - Use current location for instant pickup
+
+2. **Enter Drop Location**
+   - Type destination address
+   - Select from autocomplete suggestions
+   - View real-time fare estimate
+
+3. **Select Vehicle & Trip Type**
+   - Choose from available vehicle types
+   - Select trip type (local/outstation/hourly)
+   - View updated fare estimate
+
+4. **Complete Booking**
+   - Fill in passenger details
+   - Review fare breakdown
+   - Submit booking
+
+### Fare Estimation
+1. **Real-time Calculation**
+   - Fare updates as you change locations
+   - Accurate distance-based pricing
+   - Transparent charge breakdown
+
+2. **Additional Charges**
+   - Night charges (10 PM - 6 AM)
+   - Toll charges for outstation trips
+   - Waiting time charges
+
+## 🔒 Security Considerations
+
+1. **API Key Security**
+   - Restrict API key to your domain
+   - Enable billing alerts
+   - Monitor API usage
+
+2. **Location Privacy**
+   - User consent for location access
+   - Secure handling of location data
+   - Privacy policy compliance
 
 ## 🚀 Deployment
 
@@ -201,56 +176,77 @@ Update CSS variables in `src/app/app.scss`:
 npm run build
 ```
 
-### Deploy to Various Platforms
+### Environment Configuration
+For production deployment, update `src/environments/environment.prod.ts`:
 
-**Netlify**
-1. Connect your repository to Netlify
-2. Set build command: `npm run build`
-3. Set publish directory: `dist/taxi-booking-app`
+```typescript
+export const environment = {
+  production: true,
+  googleMapsApiKey: 'your-production-api-key'
+};
+```
 
-**Vercel**
-1. Install Vercel CLI: `npm i -g vercel`
-2. Deploy: `vercel`
+## 📊 Performance Optimization
 
-**Firebase Hosting**
-1. Install Firebase CLI: `npm i -g firebase-tools`
-2. Initialize: `firebase init hosting`
-3. Deploy: `firebase deploy`
+1. **Lazy Loading**: Components loaded on demand
+2. **Image Optimization**: Compressed images and icons
+3. **Code Splitting**: Automatic code splitting by Angular
+4. **Caching**: Browser caching for static assets
 
-## 🤝 Contributing
+## 🐛 Troubleshooting
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit changes: `git commit -am 'Add feature'`
-4. Push to branch: `git push origin feature-name`
-5. Submit a pull request
+### Common Issues
+
+1. **Google Maps Not Loading**
+   - Check API key configuration
+   - Verify API is enabled in Google Cloud Console
+   - Check browser console for errors
+
+2. **Location Access Denied**
+   - Ensure HTTPS for production
+   - Check browser permissions
+   - Provide fallback manual entry
+
+3. **Fare Calculation Errors**
+   - Verify both locations are entered
+   - Check internet connection
+   - Fallback to simple calculation
+
+### Debug Mode
+Enable debug logging by setting:
+```typescript
+// In map.service.ts
+console.log('Google Maps loaded successfully');
+```
+
+## 📞 Support
+
+For technical support or questions:
+- **WhatsApp**: +91 6374252235
+- **Email**: info@vkdrop.com
+- **Website**: [VK Drop Taxi](https://vkdrop.com)
 
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 📞 Support
+## 🤝 Contributing
 
-For support and queries:
-- **Phone**: +91 98765 43210
-- **WhatsApp**: +91 98765 43210
-- **Email**: info@vkdrop.com
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
-## 🔄 Version History
+## 📈 Future Enhancements
 
-- **v1.0.0** - Initial release with core booking functionality
-- **v1.1.0** - Added fare estimator and booking tracking
-- **v1.2.0** - Enhanced mobile responsiveness and UI improvements
-
-## 🎯 Roadmap
-
-- [ ] Payment gateway integration
-- [ ] Driver app integration
 - [ ] Real-time driver tracking
+- [ ] Payment gateway integration
 - [ ] Push notifications
 - [ ] Multi-language support
 - [ ] Advanced analytics dashboard
+- [ ] Driver app integration
 
 ---
 
-**VK Drop Taxi Pvt Ltd** - Your trusted partner for safe and reliable transportation services.
+**Built with ❤️ by VK Drop Taxi Team**

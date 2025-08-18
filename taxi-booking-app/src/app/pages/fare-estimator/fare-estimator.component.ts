@@ -1,300 +1,275 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { RouterModule } from '@angular/router';
+import { HeaderComponent } from '../../components/header/header.component';
+import { FooterComponent } from '../../components/footer/footer.component';
+import { MapService, Location } from '../../services/map.service';
 import { BookingService } from '../../services/booking.service';
-import { FareEstimate, VehicleType } from '../../models/booking.model';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-fare-estimator',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
-  template: `
-    <!-- Hero Section -->
-    <section class="hero-section">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-8 mx-auto text-center">
-            <h1>Fare Estimator</h1>
-            <p>Get instant fare estimates for your journey</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Fare Estimator Form -->
-    <section class="estimator-section py-5">
-      <div class="container">
-        <div class="row">
-          <div class="col-lg-8 mx-auto">
-            <div class="card">
-              <div class="card-body p-4">
-                <h3 class="text-center mb-4">Calculate Your Fare</h3>
-                
-                <form [formGroup]="estimatorForm" (ngSubmit)="calculateFare()">
-                  <div class="row">
-                    <!-- From Location -->
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">From *</label>
-                      <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                        <input 
-                          type="text" 
-                          class="form-control" 
-                          formControlName="fromLocation"
-                          placeholder="Enter pickup location"
-                        >
-                      </div>
-                    </div>
-
-                    <!-- To Location -->
-                    <div class="col-md-6 mb-3">
-                      <label class="form-label">To *</label>
-                      <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                        <input 
-                          type="text" 
-                          class="form-control" 
-                          formControlName="toLocation"
-                          placeholder="Enter drop location"
-                        >
-                      </div>
-                    </div>
-
-                    <!-- Trip Type -->
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Trip Type *</label>
-                      <select class="form-select" formControlName="tripType">
-                        <option value="">Select Type</option>
-                        <option value="local">Local</option>
-                        <option value="outstation">Out Station</option>
-                        <option value="hourly">Hourly</option>
-                      </select>
-                    </div>
-
-                    <!-- Vehicle Type -->
-                    <div class="col-md-4 mb-3">
-                      <label class="form-label">Vehicle Type *</label>
-                      <select class="form-select" formControlName="vehicleType">
-                        <option value="">Select Vehicle</option>
-                        <option *ngFor="let vehicle of vehicleTypes" [value]="vehicle.type">
-                          {{ vehicle.name }}
-                        </option>
-                      </select>
-                    </div>
-
-                    <!-- Hours (for hourly trips) -->
-                    <div class="col-md-4 mb-3" *ngIf="estimatorForm.get('tripType')?.value === 'hourly'">
-                      <label class="form-label">Hours *</label>
-                      <input 
-                        type="number" 
-                        class="form-control" 
-                        formControlName="hours"
-                        min="1"
-                        max="24"
-                        placeholder="Enter hours"
-                      >
-                    </div>
-
-                    <!-- Calculate Button -->
-                    <div class="col-12 text-center">
-                      <button 
-                        type="submit" 
-                        class="btn btn-primary btn-lg"
-                        [disabled]="estimatorForm.invalid || isCalculating"
-                      >
-                        <span *ngIf="isCalculating" class="spinner-border spinner-border-sm me-2"></span>
-                        {{ isCalculating ? 'Calculating...' : 'Calculate Fare' }}
-                      </button>
-                    </div>
-                  </div>
-                </form>
-
-                <!-- Fare Result -->
-                <div *ngIf="fareEstimate" class="mt-4">
-                  <div class="alert alert-success">
-                    <h4 class="alert-heading">Estimated Fare: ₹{{ fareEstimate.totalFare }}</h4>
-                    <hr>
-                    <div class="row">
-                      <div class="col-md-6">
-                        <p><strong>Distance:</strong> {{ fareEstimate.distance }} km</p>
-                        <p><strong>Duration:</strong> {{ fareEstimate.duration }} hours</p>
-                        <p><strong>Vehicle:</strong> {{ fareEstimate.vehicleType }}</p>
-                      </div>
-                      <div class="col-md-6">
-                        <p><strong>Base Fare:</strong> ₹{{ fareEstimate.baseFare }}</p>
-                        <p><strong>Distance Fare:</strong> ₹{{ fareEstimate.distanceFare }}</p>
-                        <p><strong>Time Fare:</strong> ₹{{ fareEstimate.timeFare }}</p>
-                      </div>
-                    </div>
-                    <hr>
-                    <div class="text-center">
-                      <a routerLink="/home" class="btn btn-success me-2">
-                        <i class="fas fa-car"></i> Book Now
-                      </a>
-                      <button class="btn btn-outline-primary" (click)="resetForm()">
-                        <i class="fas fa-calculator"></i> Calculate Another
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Vehicle Types Section -->
-    <section class="vehicles-section py-5 bg-light">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center mb-5">
-            <h2>Our Vehicle Types</h2>
-            <p class="text-muted">Choose the perfect vehicle for your journey</p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-3 mb-4" *ngFor="let vehicle of vehicleTypes">
-            <div class="card h-100">
-              <div class="card-body text-center">
-                <i class="fas fa-car fa-3x text-primary mb-3"></i>
-                <h5>{{ vehicle.name }}</h5>
-                <p class="text-muted">{{ vehicle.description }}</p>
-                <div class="vehicle-details">
-                  <p><strong>Base Fare:</strong> ₹{{ vehicle.baseFare }}</p>
-                  <p><strong>Per KM:</strong> ₹{{ vehicle.perKmRate }}</p>
-                  <p><strong>Per Hour:</strong> ₹{{ vehicle.perHourRate }}</p>
-                  <p><strong>Capacity:</strong> {{ vehicle.capacity }} persons</p>
-                </div>
-                <div class="vehicle-features mt-3">
-                  <small class="text-muted">
-                    <span *ngFor="let feature of vehicle.features" class="badge bg-light text-dark me-1">
-                      {{ feature }}
-                    </span>
-                  </small>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Tips Section -->
-    <section class="tips-section py-5">
-      <div class="container">
-        <div class="row">
-          <div class="col-12 text-center mb-5">
-            <h2>Fare Calculation Tips</h2>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-md-4 mb-4">
-            <div class="text-center">
-              <i class="fas fa-clock fa-2x text-primary mb-3"></i>
-              <h5>Peak Hours</h5>
-              <p>Fares may vary during peak hours (7-9 AM, 6-8 PM)</p>
-            </div>
-          </div>
-          <div class="col-md-4 mb-4">
-            <div class="text-center">
-              <i class="fas fa-route fa-2x text-primary mb-3"></i>
-              <h5>Route Optimization</h5>
-              <p>We use the most efficient route for accurate estimates</p>
-            </div>
-          </div>
-          <div class="col-md-4 mb-4">
-            <div class="text-center">
-              <i class="fas fa-info-circle fa-2x text-primary mb-3"></i>
-              <h5>Transparent Pricing</h5>
-              <p>No hidden charges. All costs are clearly displayed</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  `,
-  styles: [`
-    .estimator-section {
-      background: var(--light-color);
-    }
-    
-    .vehicles-section {
-      background: white;
-    }
-    
-    .tips-section {
-      background: var(--light-color);
-    }
-    
-    .vehicle-details p {
-      margin-bottom: 0.5rem;
-      font-size: 0.9rem;
-    }
-    
-    .vehicle-features .badge {
-      font-size: 0.7rem;
-    }
-  `]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HeaderComponent, FooterComponent],
+  templateUrl: './fare-estimator.component.html',
+  styleUrls: ['./fare-estimator.component.scss']
 })
-export class FareEstimatorComponent implements OnInit {
-  estimatorForm: FormGroup;
-  vehicleTypes: VehicleType[] = [];
-  fareEstimate: FareEstimate | null = null;
+export class FareEstimatorComponent implements OnInit, OnDestroy {
+  fareForm: FormGroup;
   isCalculating = false;
+  fareResult: any = null;
+  currentLocation: Location | null = null;
+  fromPredictions: any[] = [];
+  toPredictions: any[] = [];
+  private destroy$ = new Subject<void>();
+
+  vehicleTypes = [
+    {
+      id: 'hatchback',
+      name: 'Hatchback',
+      type: 'sedan',
+      baseFare: 10,
+      perKmRate: 12,
+      perHourRate: 100,
+      capacity: 4,
+      icon: 'fas fa-car fa-3x',
+      description: 'Economical hatchback for city travel'
+    },
+    {
+      id: 'sedan',
+      name: 'Sedan',
+      type: 'sedan',
+      baseFare: 15,
+      perKmRate: 15,
+      perHourRate: 120,
+      capacity: 4,
+      icon: 'fas fa-car fa-3x',
+      description: 'Comfortable sedan for business travel'
+    },
+    {
+      id: 'suv',
+      name: 'SUV',
+      type: 'suv',
+      baseFare: 20,
+      perKmRate: 18,
+      perHourRate: 150,
+      capacity: 6,
+      icon: 'fas fa-car fa-3x',
+      description: 'Spacious SUV for family travel'
+    },
+    {
+      id: 'luxury',
+      name: 'Luxury',
+      type: 'luxury',
+      baseFare: 30,
+      perKmRate: 25,
+      perHourRate: 200,
+      capacity: 4,
+      icon: 'fas fa-car fa-3x',
+      description: 'Premium luxury vehicle for special occasions'
+    }
+  ];
 
   constructor(
     private fb: FormBuilder,
-    private bookingService: BookingService,
-    private router: Router
+    private mapService: MapService,
+    private bookingService: BookingService
   ) {
-    this.estimatorForm = this.fb.group({
+    this.fareForm = this.fb.group({
       fromLocation: ['', Validators.required],
       toLocation: ['', Validators.required],
-      tripType: ['', Validators.required],
       vehicleType: ['', Validators.required],
-      hours: [1, [Validators.min(1), Validators.max(24)]]
+      tripType: ['', Validators.required],
+      distance: ['']
     });
   }
 
   ngOnInit(): void {
-    this.loadVehicleTypes();
+    this.setupFormListeners();
+    this.loadGoogleMaps();
   }
 
-  loadVehicleTypes(): void {
-    this.bookingService.getVehicleTypes().subscribe(types => {
-      this.vehicleTypes = types;
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupFormListeners(): void {
+    // Listen for from location changes
+    this.fareForm.get('fromLocation')?.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(value => {
+        if (value && value.length > 2) {
+          this.getPlacePredictions(value, 'from');
+        } else {
+          this.fromPredictions = [];
+        }
+      });
+
+    // Listen for to location changes
+    this.fareForm.get('toLocation')?.valueChanges
+      .pipe(
+        takeUntil(this.destroy$),
+        debounceTime(300),
+        distinctUntilChanged()
+      )
+      .subscribe(value => {
+        if (value && value.length > 2) {
+          this.getPlacePredictions(value, 'to');
+        } else {
+          this.toPredictions = [];
+        }
+      });
+  }
+
+  private loadGoogleMaps(): void {
+    this.mapService.loadGoogleMapsScript(environment.googleMapsApiKey)
+      .then(() => {
+        console.log('Google Maps loaded successfully');
+      })
+      .catch(error => {
+        console.error('Failed to load Google Maps:', error);
+      });
+  }
+
+  getCurrentLocation(): void {
+    this.mapService.getCurrentLocation().subscribe({
+      next: (location) => {
+        this.currentLocation = location;
+        this.fareForm.patchValue({
+          fromLocation: location.address
+        });
+      },
+      error: (error) => {
+        console.error('Failed to get current location:', error);
+        alert('Unable to get your current location. Please enter manually.');
+      }
     });
   }
 
-  calculateFare(): void {
-    if (this.estimatorForm.valid) {
-      this.isCalculating = true;
-      const formValue = this.estimatorForm.value;
+  private getPlacePredictions(input: string, type: 'from' | 'to'): void {
+    this.mapService.getPlacePredictions(input).subscribe({
+      next: (predictions) => {
+        if (type === 'from') {
+          this.fromPredictions = predictions;
+        } else {
+          this.toPredictions = predictions;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to get place predictions:', error);
+      }
+    });
+  }
 
+  selectPlacePrediction(prediction: any, type: 'from' | 'to'): void {
+    if (type === 'from') {
+      this.fareForm.patchValue({ fromLocation: prediction.description });
+      this.fromPredictions = [];
+    } else {
+      this.fareForm.patchValue({ toLocation: prediction.description });
+      this.toPredictions = [];
+    }
+  }
+
+  calculateFare(): void {
+    if (this.fareForm.valid) {
+      this.isCalculating = true;
+      
+      const formValue = this.fareForm.value;
+      
       this.bookingService.estimateFare(
         formValue.fromLocation,
         formValue.toLocation,
         formValue.vehicleType,
-        formValue.tripType,
-        formValue.hours
+        formValue.tripType
       ).subscribe({
         next: (estimate) => {
-          this.fareEstimate = estimate;
+          this.fareResult = {
+            fromLocation: formValue.fromLocation,
+            toLocation: formValue.toLocation,
+            distance: estimate.distance,
+            duration: estimate.duration,
+            vehicleName: estimate.vehicleType,
+            tripType: formValue.tripType,
+            baseFare: estimate.baseFare,
+            distanceFare: estimate.distanceFare,
+            timeFare: estimate.timeFare,
+            tollCharges: this.calculateTollCharges(estimate.distance, formValue.tripType),
+            nightCharges: this.calculateNightCharges(),
+            totalFare: estimate.totalFare
+          };
           this.isCalculating = false;
         },
         error: (error) => {
+          console.error('Failed to calculate fare:', error);
           this.isCalculating = false;
-          alert('Failed to calculate fare. Please try again.');
-          console.error('Fare calculation error:', error);
+          // Fallback to simple calculation
+          this.calculateSimpleFare(formValue);
         }
       });
     }
   }
 
-  resetForm(): void {
-    this.estimatorForm.reset();
-    this.fareEstimate = null;
+  private calculateSimpleFare(formValue: any): void {
+    const selectedVehicle = this.vehicleTypes.find(v => v.id === formValue.vehicleType);
+    
+    if (selectedVehicle) {
+      const distance = formValue.distance || this.estimateDistance(formValue.fromLocation, formValue.toLocation);
+      const baseFare = selectedVehicle.baseFare;
+      const distanceFare = distance * selectedVehicle.perKmRate;
+      const tollCharges = this.calculateTollCharges(distance, formValue.tripType);
+      const nightCharges = this.calculateNightCharges();
+      const totalFare = baseFare + distanceFare + tollCharges + nightCharges;
+
+      this.fareResult = {
+        fromLocation: formValue.fromLocation,
+        toLocation: formValue.toLocation,
+        distance: distance,
+        duration: Math.round((distance / 30) * 60), // Assuming 30 km/h
+        vehicleName: selectedVehicle.name,
+        tripType: formValue.tripType,
+        baseFare: baseFare,
+        distanceFare: distanceFare,
+        tollCharges: tollCharges,
+        nightCharges: nightCharges,
+        totalFare: totalFare
+      };
+    }
+  }
+
+  private estimateDistance(from: string, to: string): number {
+    const commonDistances: { [key: string]: number } = {
+      'mumbai to pune': 148,
+      'mumbai to lonavala': 83,
+      'mumbai to alibaug': 95,
+      'mumbai to goa': 590,
+      'mumbai to nashik': 180,
+      'mumbai to aurangabad': 330
+    };
+    
+    const route = `${from.toLowerCase()} to ${to.toLowerCase()}`;
+    return commonDistances[route] || Math.floor(Math.random() * 50) + 10;
+  }
+
+  private calculateTollCharges(distance: number, tripType: string): number {
+    if (tripType === 'outstation' && distance > 100) {
+      return Math.floor(distance / 50) * 50;
+    }
+    return 0;
+  }
+
+  private calculateNightCharges(): number {
+    const currentHour = new Date().getHours();
+    if (currentHour >= 22 || currentHour <= 6) {
+      return 50;
+    }
+    return 0;
   }
 }

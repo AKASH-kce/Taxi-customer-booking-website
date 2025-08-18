@@ -12,5 +12,5 @@ export class LoadingSpinnerComponent {
   @Input() isLoading: boolean = false;
   @Input() message: string = 'Loading...';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
-  @Input() overlay: boolean = false;
+  @Input() showOverlay: boolean = false;
 }

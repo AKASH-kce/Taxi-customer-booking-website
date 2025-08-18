@@ -1,0 +1,305 @@
+<app-header></app-header>
+
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto text-center">
+        <h1>Fare Estimator</h1>
+        <p>Calculate your taxi fare before booking with real-time map data</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Fare Calculator -->
+<section class="fare-calculator py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="calculator-card">
+          <h3 class="text-center mb-4">Calculate Your Fare</h3>
+          
+          <form [formGroup]="fareForm" (ngSubmit)="calculateFare()">
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">From Location *</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    formControlName="fromLocation"
+                    placeholder="Enter pickup location"
+                    [class.is-invalid]="fareForm.get('fromLocation')?.invalid && fareForm.get('fromLocation')?.touched"
+                  >
+                  <button 
+                    type="button" 
+                    class="btn btn-outline-primary" 
+                    (click)="getCurrentLocation()"
+                    title="Use Current Location"
+                  >
+                    <i class="fas fa-crosshairs"></i>
+                  </button>
+                </div>
+                <div class="invalid-feedback" *ngIf="fareForm.get('fromLocation')?.invalid && fareForm.get('fromLocation')?.touched">
+                  Pickup location is required
+                </div>
+                
+                <!-- Location Predictions -->
+                <div class="predictions-dropdown" *ngIf="fromPredictions.length > 0">
+                  <div 
+                    class="prediction-item" 
+                    *ngFor="let prediction of fromPredictions"
+                    (click)="selectPlacePrediction(prediction, 'from')"
+                  >
+                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                    <div>
+                      <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
+                      <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label">To Location *</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    formControlName="toLocation"
+                    placeholder="Enter drop location"
+                    [class.is-invalid]="fareForm.get('toLocation')?.invalid && fareForm.get('toLocation')?.touched"
+                  >
+                </div>
+                <div class="invalid-feedback" *ngIf="fareForm.get('toLocation')?.invalid && fareForm.get('toLocation')?.touched">
+                  Drop location is required
+                </div>
+                
+                <!-- Location Predictions -->
+                <div class="predictions-dropdown" *ngIf="toPredictions.length > 0">
+                  <div 
+                    class="prediction-item" 
+                    *ngFor="let prediction of toPredictions"
+                    (click)="selectPlacePrediction(prediction, 'to')"
+                  >
+                    <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                    <div>
+                      <div class="prediction-main">{{ prediction.structured_formatting?.main_text }}</div>
+                      <div class="prediction-secondary">{{ prediction.structured_formatting?.secondary_text }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Vehicle Type *</label>
+                <select class="form-select" formControlName="vehicleType" [class.is-invalid]="fareForm.get('vehicleType')?.invalid && fareForm.get('vehicleType')?.touched">
+                  <option value="">Select Vehicle</option>
+                  <option *ngFor="let vehicle of vehicleTypes" [value]="vehicle.id">
+                    {{ vehicle.name }}
+                  </option>
+                </select>
+                <div class="invalid-feedback" *ngIf="fareForm.get('vehicleType')?.invalid && fareForm.get('vehicleType')?.touched">
+                  Vehicle type is required
+                </div>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Trip Type *</label>
+                <select class="form-select" formControlName="tripType" [class.is-invalid]="fareForm.get('tripType')?.invalid && fareForm.get('tripType')?.touched">
+                  <option value="">Select Trip Type</option>
+                  <option value="local">Local</option>
+                  <option value="outstation">Out Station</option>
+                  <option value="hourly">Hourly</option>
+                </select>
+                <div class="invalid-feedback" *ngIf="fareForm.get('tripType')?.invalid && fareForm.get('tripType')?.touched">
+                  Trip type is required
+                </div>
+              </div>
+              
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Distance (km)</label>
+                <input 
+                  type="number" 
+                  class="form-control" 
+                  formControlName="distance"
+                  placeholder="Enter distance"
+                  min="1"
+                >
+              </div>
+            </div>
+            
+            <div class="text-center mt-4">
+              <button 
+                type="submit" 
+                class="btn btn-primary btn-lg"
+                [disabled]="fareForm.invalid || isCalculating"
+              >
+                <span *ngIf="isCalculating" class="spinner-border spinner-border-sm me-2"></span>
+                {{ isCalculating ? 'Calculating...' : 'Calculate Fare' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Fare Result -->
+<section class="fare-result py-5 bg-light" *ngIf="fareResult">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 mx-auto">
+        <div class="result-card">
+          <h3 class="text-center mb-4">Fare Estimate</h3>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="trip-details">
+                <h5>Trip Details</h5>
+                <div class="detail-item">
+                  <span class="label">From:</span>
+                  <span class="value">{{ fareResult.fromLocation }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">To:</span>
+                  <span class="value">{{ fareResult.toLocation }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Distance:</span>
+                  <span class="value">{{ fareResult.distance }} km</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Duration:</span>
+                  <span class="value">{{ fareResult.duration }} min</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Vehicle:</span>
+                  <span class="value">{{ fareResult.vehicleName }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="label">Trip Type:</span>
+                  <span class="value">{{ fareResult.tripType }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="fare-breakdown">
+                <h5>Fare Breakdown</h5>
+                <div class="breakdown-item">
+                  <span class="label">Base Fare:</span>
+                  <span class="value">₹{{ fareResult.baseFare }}</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="label">Distance Fare:</span>
+                  <span class="value">₹{{ fareResult.distanceFare }}</span>
+                </div>
+                <div class="breakdown-item" *ngIf="fareResult.tollCharges > 0">
+                  <span class="label">Toll Charges:</span>
+                  <span class="value">₹{{ fareResult.tollCharges }}</span>
+                </div>
+                <div class="breakdown-item" *ngIf="fareResult.nightCharges > 0">
+                  <span class="label">Night Charges:</span>
+                  <span class="value">₹{{ fareResult.nightCharges }}</span>
+                </div>
+                <hr>
+                <div class="breakdown-item total">
+                  <span class="label">Total Fare:</span>
+                  <span class="value">₹{{ fareResult.totalFare }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="text-center mt-4">
+            <a routerLink="/home" class="btn btn-primary btn-lg me-3">
+              <i class="fas fa-car"></i> Book Now
+            </a>
+            <a href="https://wa.me/6374252235?text=I want to book a ride from {{ fareResult.fromLocation }} to {{ fareResult.toLocation }}" target="_blank" class="btn btn-success btn-lg">
+              <i class="fab fa-whatsapp"></i> WhatsApp Booking
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Vehicle Types -->
+<section class="vehicle-types py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2>Our Vehicle Types</h2>
+        <p class="text-muted">Choose from our wide range of vehicles</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6 col-lg-3 mb-4" *ngFor="let vehicle of vehicleTypes">
+        <div class="vehicle-card">
+          <div class="vehicle-icon">
+            <i [class]="vehicle.icon"></i>
+          </div>
+          <h5>{{ vehicle.name }}</h5>
+          <div class="vehicle-price">
+            <span class="base-price">₹{{ vehicle.baseFare }}</span>
+            <span class="per-km">+ ₹{{ vehicle.perKmRate }}/km</span>
+          </div>
+          <div class="vehicle-features">
+            <span class="feature">{{ vehicle.capacity }} Seats</span>
+            <span class="feature">{{ vehicle.type }}</span>
+          </div>
+          <p class="vehicle-description">{{ vehicle.description }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Fare Information -->
+<section class="fare-info py-5 bg-light">
+  <div class="container">
+    <div class="row">
+      <div class="col-12 text-center mb-5">
+        <h2>Fare Information</h2>
+        <p class="text-muted">Understanding our pricing structure</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="fas fa-calculator fa-3x text-primary"></i>
+          </div>
+          <h5>Base Fare</h5>
+          <p>Fixed starting fare that covers initial distance and waiting time</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="fas fa-route fa-3x text-primary"></i>
+          </div>
+          <h5>Distance Fare</h5>
+          <p>Per kilometer charge based on the actual distance traveled</p>
+        </div>
+      </div>
+      <div class="col-md-4 mb-4">
+        <div class="info-card">
+          <div class="info-icon">
+            <i class="fas fa-clock fa-3x text-primary"></i>
+          </div>
+          <h5>Additional Charges</h5>
+          <p>Night charges, toll fees, and waiting time charges if applicable</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<app-footer></app-footer>
