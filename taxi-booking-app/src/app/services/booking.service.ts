@@ -114,176 +114,342 @@ export class BookingService {
   }
 
   // Estimate fare with real map data
-  estimateFare(
-    pickup: string,
-    drop: string,
-    vehicleType: string,
-    tripType: 'local' | 'outstation' | 'hourly',
-    hours?: number
-  ): Observable<FareEstimate> {
-    return new Observable(observer => {
-      // First geocode both addresses
-      this.mapService.geocodeAddress(pickup).subscribe({
-        next: (originLocation) => {
-          this.mapService.geocodeAddress(drop).subscribe({
-            next: (destinationLocation) => {
-              // Get route information
-              this.mapService.getRouteInfo(originLocation, destinationLocation).subscribe({
-                next: (routeInfo) => {
-                  const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
-                  if (!vehicle) {
-                    observer.error('Vehicle type not found');
-                    return;
-                  }
+  // estimateFare(
+  //   pickup: string,
+  //   drop: string,
+  //   vehicleType: string,
+  //   tripType: 'local' | 'outstation' | 'hourly',
+  //   hours?: number
+  // ): Observable<FareEstimate> {
+  //   return new Observable(observer => {
+  //     // First geocode both addresses
+  //     this.mapService.geocodeAddress(pickup).subscribe({
+  //       next: (originLocation) => {
+  //         this.mapService.geocodeAddress(drop).subscribe({
+  //           next: (destinationLocation) => {
+  //             // Get route information
+  //             this.mapService.getRouteInfo(originLocation, destinationLocation).subscribe({
+  //               next: (routeInfo) => {
+  //                 const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
+  //                 if (!vehicle) {
+  //                   observer.error('Vehicle type not found');
+  //                   return;
+  //                 }
 
-                  let totalFare = vehicle.baseFare;
-                  let distanceFare = 0;
-                  let timeFare = 0;
+  //                 let totalFare = vehicle.baseFare;
+  //                 let distanceFare = 0;
+  //                 let timeFare = 0;
 
-                  if (tripType === 'hourly' && hours) {
-                    timeFare = vehicle.perHourRate * hours;
-                    totalFare += timeFare;
-                  } else {
-                    distanceFare = vehicle.perKmRate * routeInfo.distance;
-                    totalFare += distanceFare;
-                  }
+  //                 if (tripType === 'hourly' && hours) {
+  //                   timeFare = vehicle.perHourRate * hours;
+  //                   totalFare += timeFare;
+  //                 } else {
+  //                   distanceFare = vehicle.perKmRate * routeInfo.distance;
+  //                   totalFare += distanceFare;
+  //                 }
 
-                  // Add additional charges
-                  const tollCharges = this.calculateTollCharges(routeInfo.distance, tripType);
-                  const nightCharges = this.calculateNightCharges();
-                  const waitingCharges = this.calculateWaitingCharges(routeInfo.duration);
+  //                 // Add additional charges
+  //                 const tollCharges = this.calculateTollCharges(routeInfo.distance, tripType);
+  //                 const nightCharges = this.calculateNightCharges();
+  //                 const waitingCharges = this.calculateWaitingCharges(routeInfo.duration);
 
-                  totalFare += tollCharges + nightCharges + waitingCharges;
+  //                 totalFare += tollCharges + nightCharges + waitingCharges;
 
-                  const estimate: FareEstimate = {
-                    distance: Math.round(routeInfo.distance * 100) / 100,
-                    duration: Math.round(routeInfo.duration * 100) / 100,
-                    baseFare: vehicle.baseFare,
-                    distanceFare: Math.round(distanceFare),
-                    timeFare: Math.round(timeFare),
-                    totalFare: Math.round(totalFare),
-                    vehicleType: vehicle.name,
-                    tripType: tripType
-                  };
+  //                 const estimate: FareEstimate = {
+  //                   distance: Math.round(routeInfo.distance * 100) / 100,
+  //                   duration: Math.round(routeInfo.duration * 100) / 100,
+  //                   baseFare: vehicle.baseFare,
+  //                   distanceFare: Math.round(distanceFare),
+  //                   timeFare: Math.round(timeFare),
+  //                   totalFare: Math.round(totalFare),
+  //                   vehicleType: vehicle.name,
+  //                   tripType: tripType
+  //                 };
 
-                  observer.next(estimate);
-                  observer.complete();
-                },
-                error: (error) => {
-                  // Fallback to simple calculation if route service fails
-                  const fallbackDistance = this.mapService.calculateDistance(
-                    originLocation.lat, originLocation.lng,
-                    destinationLocation.lat, destinationLocation.lng
-                  );
+  //                 observer.next(estimate);
+  //                 observer.complete();
+  //               },
+  //               error: (error) => {
+  //                 // Fallback to simple calculation if route service fails
+  //                 const fallbackDistance = this.mapService.calculateDistance(
+  //                   originLocation.lat, originLocation.lng,
+  //                   destinationLocation.lat, destinationLocation.lng
+  //                 );
                   
-                  const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
-                  if (!vehicle) {
-                    observer.error('Vehicle type not found');
-                    return;
-                  }
+  //                 const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
+  //                 if (!vehicle) {
+  //                   observer.error('Vehicle type not found');
+  //                   return;
+  //                 }
 
-                  let totalFare = vehicle.baseFare;
-                  let distanceFare = 0;
-                  let timeFare = 0;
+  //                 let totalFare = vehicle.baseFare;
+  //                 let distanceFare = 0;
+  //                 let timeFare = 0;
 
-                  if (tripType === 'hourly' && hours) {
-                    timeFare = vehicle.perHourRate * hours;
-                    totalFare += timeFare;
-                  } else {
-                    distanceFare = vehicle.perKmRate * fallbackDistance;
-                    totalFare += distanceFare;
-                  }
+  //                 if (tripType === 'hourly' && hours) {
+  //                   timeFare = vehicle.perHourRate * hours;
+  //                   totalFare += timeFare;
+  //                 } else {
+  //                   distanceFare = vehicle.perKmRate * fallbackDistance;
+  //                   totalFare += distanceFare;
+  //                 }
 
-                  const estimate: FareEstimate = {
-                    distance: Math.round(fallbackDistance * 100) / 100,
-                    duration: Math.round((fallbackDistance / 30) * 60 * 100) / 100, // Assuming 30 km/h
-                    baseFare: vehicle.baseFare,
-                    distanceFare: Math.round(distanceFare),
-                    timeFare: Math.round(timeFare),
-                    totalFare: Math.round(totalFare),
-                    vehicleType: vehicle.name,
-                    tripType: tripType
-                  };
+  //                 const estimate: FareEstimate = {
+  //                   distance: Math.round(fallbackDistance * 100) / 100,
+  //                   duration: Math.round((fallbackDistance / 30) * 60 * 100) / 100, // Assuming 30 km/h
+  //                   baseFare: vehicle.baseFare,
+  //                   distanceFare: Math.round(distanceFare),
+  //                   timeFare: Math.round(timeFare),
+  //                   totalFare: Math.round(totalFare),
+  //                   vehicleType: vehicle.name,
+  //                   tripType: tripType
+  //                 };
 
-                  observer.next(estimate);
-                  observer.complete();
-                }
-              });
-            },
-            error: (error) => {
-              observer.error('Failed to geocode destination: ' + error);
-            }
-          });
-        },
-        error: (error) => {
-          observer.error('Failed to geocode origin: ' + error);
-        }
-      });
-    });
-  }
+  //                 observer.next(estimate);
+  //                 observer.complete();
+  //               }
+  //             });
+  //           },
+  //           error: (error) => {
+  //             observer.error('Failed to geocode destination: ' + error);
+  //           }
+  //         });
+  //       },
+  //       error: (error) => {
+  //         observer.error('Failed to geocode origin: ' + error);
+  //       }
+  //     });
+  //   });
+  // }
 
   // Get current location and estimate fare
-  estimateFareFromCurrentLocation(
-    drop: string,
-    vehicleType: string,
-    tripType: 'local' | 'outstation' | 'hourly',
-    hours?: number
-  ): Observable<FareEstimate> {
-    return new Observable(observer => {
-      this.mapService.getCurrentLocation().subscribe({
-        next: (currentLocation) => {
-          this.mapService.geocodeAddress(drop).subscribe({
-            next: (destinationLocation) => {
-              this.mapService.getRouteInfo(currentLocation, destinationLocation).subscribe({
-                next: (routeInfo) => {
-                  const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
-                  if (!vehicle) {
-                    observer.error('Vehicle type not found');
-                    return;
-                  }
+  // estimateFareFromCurrentLocation(
+  //   drop: string,
+  //   vehicleType: string,
+  //   tripType: 'local' | 'outstation' | 'hourly',
+  //   hours?: number
+  // ): Observable<FareEstimate> {
+  //   return new Observable(observer => {
+  //     this.mapService.getCurrentLocation().subscribe({
+  //       next: (currentLocation) => {
+  //         this.mapService.geocodeAddress(drop).subscribe({
+  //           next: (destinationLocation) => {
+  //             this.mapService.getRouteInfo(currentLocation, destinationLocation).subscribe({
+  //               next: (routeInfo) => {
+  //                 const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
+  //                 if (!vehicle) {
+  //                   observer.error('Vehicle type not found');
+  //                   return;
+  //                 }
 
-                  let totalFare = vehicle.baseFare;
-                  let distanceFare = 0;
-                  let timeFare = 0;
+  //                 let totalFare = vehicle.baseFare;
+  //                 let distanceFare = 0;
+  //                 let timeFare = 0;
 
-                  if (tripType === 'hourly' && hours) {
-                    timeFare = vehicle.perHourRate * hours;
-                    totalFare += timeFare;
-                  } else {
-                    distanceFare = vehicle.perKmRate * routeInfo.distance;
-                    totalFare += distanceFare;
-                  }
+  //                 if (tripType === 'hourly' && hours) {
+  //                   timeFare = vehicle.perHourRate * hours;
+  //                   totalFare += timeFare;
+  //                 } else {
+  //                   distanceFare = vehicle.perKmRate * routeInfo.distance;
+  //                   totalFare += distanceFare;
+  //                 }
 
-                  const estimate: FareEstimate = {
-                    distance: Math.round(routeInfo.distance * 100) / 100,
-                    duration: Math.round(routeInfo.duration * 100) / 100,
-                    baseFare: vehicle.baseFare,
-                    distanceFare: Math.round(distanceFare),
-                    timeFare: Math.round(timeFare),
-                    totalFare: Math.round(totalFare),
-                    vehicleType: vehicle.name,
-                    tripType: tripType
-                  };
+  //                 const estimate: FareEstimate = {
+  //                   distance: Math.round(routeInfo.distance * 100) / 100,
+  //                   duration: Math.round(routeInfo.duration * 100) / 100,
+  //                   baseFare: vehicle.baseFare,
+  //                   distanceFare: Math.round(distanceFare),
+  //                   timeFare: Math.round(timeFare),
+  //                   totalFare: Math.round(totalFare),
+  //                   vehicleType: vehicle.name,
+  //                   tripType: tripType
+  //                 };
 
-                  observer.next(estimate);
-                  observer.complete();
-                },
-                error: (error) => {
-                  observer.error('Failed to get route: ' + error);
-                }
-              });
-            },
-            error: (error) => {
-              observer.error('Failed to geocode destination: ' + error);
-            }
-          });
-        },
-        error: (error) => {
-          observer.error('Failed to get current location: ' + error);
+  //                 observer.next(estimate);
+  //                 observer.complete();
+  //               },
+  //               error: (error) => {
+  //                 observer.error('Failed to get route: ' + error);
+  //               }
+  //             });
+  //           },
+  //           error: (error) => {
+  //             observer.error('Failed to geocode destination: ' + error);
+  //           }
+  //         });
+  //       },
+  //       error: (error) => {
+  //         observer.error('Failed to get current location: ' + error);
+  //       }
+  //     });
+  //   });
+  // }
+
+
+  estimateFare(
+  pickup: string,
+  drop: string,
+  vehicleType: string,
+  tripType: 'local' | 'outstation' | 'hourly',
+  hours?: number
+): Observable<FareEstimate> {
+  return new Observable<FareEstimate>((observer) => {
+    // Validate inputs
+    if (!pickup || !drop) {
+      observer.error('Pickup and drop locations are required');
+      return;
+    }
+
+    // Validate and sanitize hours
+    let validHours = 1;
+    if (tripType === 'hourly') {
+      validHours = hours && hours > 0 && hours <= 24 ? hours : 1;
+    }
+
+    // Step 1: Geocode Pickup Location
+    this.mapService.geocodeAddress(pickup).subscribe({
+      next: (originLocation) => {
+        if (!originLocation || isNaN(originLocation.lat) || isNaN(originLocation.lng)) {
+          observer.error('Invalid pickup location: Could not determine coordinates');
+          return;
         }
-      });
+
+        // Prevent (0,0) or ocean coordinates
+        if (Math.abs(originLocation.lat) < 0.0001 && Math.abs(originLocation.lng) < 0.0001) {
+          observer.error('Geocoding failed: Pickup at invalid (0,0) location');
+          return;
+        }
+
+        // Step 2: Geocode Drop Location
+        this.mapService.geocodeAddress(drop).subscribe({
+          next: (destinationLocation) => {
+            if (!destinationLocation || isNaN(destinationLocation.lat) || isNaN(destinationLocation.lng)) {
+              observer.error('Invalid drop location: Could not determine coordinates');
+              return;
+            }
+
+            if (Math.abs(destinationLocation.lat) < 0.0001 && Math.abs(destinationLocation.lng) < 0.0001) {
+              observer.error('Geocoding failed: Drop at invalid (0,0) location');
+              return;
+            }
+
+            // Step 3: Get Route Info (Distance & Duration)
+            this.mapService.getRouteInfo(originLocation, destinationLocation).subscribe({
+              next: (routeInfo) => {
+                let distanceInKm = routeInfo.distance;
+                let durationInMinutes = routeInfo.duration;
+
+                // Fix: If distance is in meters (e.g., > 1000), convert to km
+                if (distanceInKm > 1000) {
+                  console.warn('Distance likely in meters, converting to km:', distanceInKm);
+                  distanceInKm /= 1000;
+                }
+
+                // Safety cap: Max 500 km for local/outstation
+                if (distanceInKm > 500) {
+                  console.warn('Distance too large, capping at 500 km:', distanceInKm);
+                  distanceInKm = 500;
+                }
+
+                this.calculateFareEstimate(
+                  vehicleType,
+                  tripType,
+                  distanceInKm,
+                  durationInMinutes,
+                  validHours,
+                  observer
+                );
+              },
+              error: () => {
+                // Fallback: Use straight-line distance if route API fails
+                const fallbackDistanceMeters = this.mapService.calculateDistance(
+                  originLocation.lat,
+                  originLocation.lng,
+                  destinationLocation.lat,
+                  destinationLocation.lng
+                );
+
+                let fallbackDistanceKm = fallbackDistanceMeters / 1000; // Convert to km
+
+                if (fallbackDistanceKm > 500 || fallbackDistanceKm <= 0) {
+                  observer.error('Invalid distance in fallback calculation');
+                  return;
+                }
+
+                const estimatedDuration = (fallbackDistanceKm / 30) * 60; // 30 km/h average
+
+                this.calculateFareEstimate(
+                  vehicleType,
+                  tripType,
+                  fallbackDistanceKm,
+                  estimatedDuration,
+                  validHours,
+                  observer
+                );
+              }
+            });
+          },
+          error: (err) => {
+            observer.error('Failed to geocode drop location: ' + err);
+          }
+        });
+      },
+      error: (err) => {
+        observer.error('Failed to geocode pickup location: ' + err);
+      }
     });
+  });
+}
+
+
+private calculateFareEstimate(
+  vehicleType: string,
+  tripType: 'local' | 'outstation' | 'hourly',
+  distance: number,
+  duration: number,
+  hours: number,
+  observer: any
+) {
+  const vehicle = this.vehicleTypes.find(v => v.type === vehicleType);
+  if (!vehicle) {
+    observer.error('Vehicle type not found');
+    return;
   }
+
+  let totalFare = vehicle.baseFare;
+  let distanceFare = 0;
+  let timeFare = 0;
+
+  if (tripType === 'hourly') {
+    timeFare = vehicle.perHourRate * hours;
+    totalFare += timeFare;
+  } else {
+    distanceFare = vehicle.perKmRate * distance;
+    totalFare += distanceFare;
+  }
+
+  // Additional charges
+  const tollCharges = tripType === 'outstation' && distance > 100 ? Math.floor(distance / 50) * 50 : 0;
+  const nightCharges = this.calculateNightCharges(); // ₹50 between 10 PM - 6 AM
+  const waitingCharges = Math.floor(duration / 15) * 10; // ₹10 per 15 mins
+
+  totalFare += tollCharges + nightCharges + waitingCharges;
+
+  const estimate: FareEstimate = {
+    distance: Math.round(distance * 100) / 100,
+    duration: Math.round(duration * 100) / 100,
+    baseFare: vehicle.baseFare,
+    distanceFare: Math.round(distanceFare),
+    timeFare: Math.round(timeFare),
+    totalFare: Math.round(totalFare),
+    vehicleType: vehicle.name,
+    tripType: tripType
+  };
+
+  console.log('Fare Estimate:', estimate); // Debug
+  observer.next(estimate);
+  observer.complete();
+}
 
   // Get vehicle types
   getVehicleTypes(): Observable<VehicleType[]> {
