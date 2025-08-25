@@ -1,16 +1,15 @@
 {
   "name": "vk-drop-taxi-booking",
   "version": "1.0.0",
+  "engines": {
+    "node": "20.x"
+  },
   "description": "VK Drop Taxi - Professional Taxi Booking Website",
-"scripts": {
-  "start": "node server.js",
-  "build": "ng build --configuration=production",
-  "postbuild": "node copy-redirects.js"
-}
-
-
-
-,
+  "scripts": {
+    "start": "node server.js",
+    "build": "ng build --configuration=production",
+    "postbuild": "node copy-redirects.js"
+  },
   "prettier": {
     "printWidth": 100,
     "singleQuote": true,
