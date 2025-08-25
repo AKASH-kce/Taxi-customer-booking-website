@@ -3,11 +3,11 @@
   "version": "1.0.0",
   "description": "VK Drop Taxi - Professional Taxi Booking Website",
 "scripts": {
-  "ng": "ng",
-  "start": "ng serve",
+  "start": "node server.js",
   "build": "ng build --configuration=production",
   "postbuild": "node copy-redirects.js"
 }
+
 
 ,
   "prettier": {
