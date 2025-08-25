@@ -6,7 +6,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class MailService {
-  private apiUrl = 'https://localhost:7110/api/Email/send'; // your backend URL
+  private apiUrl = 'https://my-dotnet-api-yte3.onrender.com/api/Email/send'; // your backend URL
 
   constructor(private http: HttpClient) {}
 
