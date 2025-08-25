@@ -6,8 +6,9 @@
   "ng": "ng",
   "start": "ng serve",
   "build": "ng build --configuration=production",
-  "postbuild": "copy src\\_redirects dist\\taxi-booking-app\\browser\\_redirects"
+  "postbuild": "node copy-redirects.js"
 }
+
 ,
   "prettier": {
     "printWidth": 100,
