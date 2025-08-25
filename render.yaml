@@ -1,0 +1,10 @@
+services:
+  - type: static_site
+    name: taxi-booking-app
+    plan: free
+    buildCommand: npm install && npm run build -- --configuration=production
+    publishPath: dist/taxi-booking-app/browser
+    redirects:
+      - source: "/*"
+        destination: "/index.html"
+        status: 200

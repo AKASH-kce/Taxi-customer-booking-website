@@ -8,6 +8,7 @@ import { BookingService } from '../../services/booking.service';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 import * as L from 'leaflet';
 import { BookingPaymentService } from '../../services/booking-payment.service';
+import { MailService } from '../../services/mail-services';
 
 // Google Maps type declarations
 declare global {
@@ -104,7 +105,8 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private mapService: MapService,
     private bookingService: BookingService,
-    private bookingPaymentservice:BookingPaymentService
+    private bookingPaymentservice:BookingPaymentService,
+    private mailService: MailService
   ) {
     this.bookingForm = this.fb.group({
       pickupLocation: ['', [Validators.required]],
@@ -362,45 +364,45 @@ export class BookingFormComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSubmit() {
-    if (this.bookingForm.valid) {
-      this.isLoading = true;
+//   onSubmit() {
+//     if (this.bookingForm.valid) {
+//       this.isLoading = true;
 
-      const formValue = this.bookingForm.value;
-      const bookingData: Booking = {
-        id: this.generateBookingId(),
-        bookingId: this.generateBookingId(),
-        customerName: formValue.passengerName,
-        customerPhone: formValue.passengerPhone,
-        customerEmail: formValue.passengerEmail,
-        pickupLocation: formValue.pickupLocation,
-        dropLocation: formValue.dropLocation,
-        tripType: formValue.tripType,
-        tripMode: formValue.tripMode,
-        vehicleType: formValue.vehicleType,
-        date: formValue.pickupDate,
-        time: formValue.pickupTime,
-        estimatedFare: this.estimatedFare || this.calculateEstimatedFare(),
-        status: 'pending',
-        bookingDate: new Date(),
-        paymentStatus: 'pending',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        notes: formValue.specialInstructions
-      };
-//  this.bookingSubmitted.emit(bookingData);
-      // Simulate API call
-      setTimeout(() => {
+//       const formValue = this.bookingForm.value;
+//       const bookingData: Booking = {
+//         id: this.generateBookingId(),
+//         bookingId: this.generateBookingId(),
+//         customerName: formValue.passengerName,
+//         customerPhone: formValue.passengerPhone,
+//         customerEmail: formValue.passengerEmail,
+//         pickupLocation: formValue.pickupLocation,
+//         dropLocation: formValue.dropLocation,
+//         tripType: formValue.tripType,
+//         tripMode: formValue.tripMode,
+//         vehicleType: formValue.vehicleType,
+//         date: formValue.pickupDate,
+//         time: formValue.pickupTime,
+//         estimatedFare: this.estimatedFare || this.calculateEstimatedFare(),
+//         status: 'pending',
+//         bookingDate: new Date(),
+//         paymentStatus: 'pending',
+//         createdAt: new Date(),
+//         updatedAt: new Date(),
+//         notes: formValue.specialInstructions
+//       };
+// //  this.bookingSubmitted.emit(bookingData);
+//       // Simulate API call
+//       setTimeout(() => {
        
-        this.isLoading = false;
-        this.bookingForm.reset();
-        this.showFareEstimate = false;
-        this.estimatedFare = 0;
-      }, 2000);
-    } else {
-      this.markFormGroupTouched();
-    }
-  }
+//         this.isLoading = false;
+//         this.bookingForm.reset();
+//         this.showFareEstimate = false;
+//         this.estimatedFare = 0;
+//       }, 2000);
+//     } else {
+//       this.markFormGroupTouched();
+//     }
+//   }
 
   private generateBookingId(): string {
     return 'BK' + Date.now().toString().slice(-8);
@@ -502,23 +504,78 @@ closeQRPopup() {
   this.currentBookingData = null;
 }
 
+onSubmit() {
+  if (this.bookingForm.valid) {
+    this.isLoading = true;
+
+    const formValue = this.bookingForm.value;
+    const bookingData: Booking = {
+      id: this.generateBookingId(),
+      bookingId: this.generateBookingId(),
+      customerName: formValue.passengerName,
+      customerPhone: formValue.passengerPhone,
+      customerEmail: formValue.passengerEmail,
+      pickupLocation: formValue.pickupLocation,
+      dropLocation: formValue.dropLocation,
+      tripType: formValue.tripType,
+      tripMode: formValue.tripMode,
+      vehicleType: formValue.vehicleType,
+      date: formValue.pickupDate,
+      time: formValue.pickupTime,
+      estimatedFare: this.estimatedFare || this.calculateEstimatedFare(),
+      status: 'pending',
+      bookingDate: new Date(),
+      paymentStatus: 'pending',   // always pending for Book Now
+      paymentMethod: 'cash',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      notes: formValue.specialInstructions
+    };
+
+    // ✅ Send booking data to backend via MailService
+    this.mailService.sendBookingEmail(bookingData).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.bookingForm.reset();
+        this.showFareEstimate = false;
+        this.estimatedFare = 0;
+        alert(`Booking successful! Confirmation email sent to ${bookingData.customerEmail}`);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        alert('Booking saved but email failed: ' + err.message);
+      }
+    });
+  } else {
+    this.markFormGroupTouched();
+  }
+}
+
+
 confirmPayment() {
   if (!this.currentBookingData) return;
-  
+
   this.isLoading = true;
-  
+
   this.currentBookingData.paymentStatus = 'paid';
-  
-  setTimeout(() => {
-    // this.bookingSubmitted.emit(this.currentBookingData);
-    this.showQRPopup = false;
-    this.isLoading = false;
-    this.bookingForm.reset();
-    this.showFareEstimate = false;
-    this.estimatedFare = 0;
-    alert(`Payment successful! Your booking ID: ${this.currentBookingId}`);
-    
-    this.currentBookingData = null;
-  }, 1500);
+  this.currentBookingData.paymentMethod = 'upi';
+
+  // ✅ Send paid booking data to backend
+  this.mailService.sendBookingEmail(this.currentBookingData).subscribe({
+    next: () => {
+      this.showQRPopup = false;
+      this.isLoading = false;
+      this.bookingForm.reset();
+      this.showFareEstimate = false;
+      this.estimatedFare = 0;
+      alert(`Payment successful! Confirmation email sent to ${this.currentBookingData?.customerEmail}`);
+      this.currentBookingData = null;
+    },
+    error: (err) => {
+      this.isLoading = false;
+      alert('Payment confirmed but email failed: ' + err.message);
+    }
+  });
 }
+
 }
